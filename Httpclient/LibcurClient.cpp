@@ -20,14 +20,6 @@ LibcurClient::LibcurClient()
 //get请求方法
 int LibcurClient::HttpGetData(const char *url, int timeout , int connect_timeout)
 {
-	//判断是否申请内存成功
-	if(m_curl == NULL)
-	{
-		printf("%s", "初始化失败!\n");
-		curl_easy_cleanup(m_curl);
-		return -1;
-	}
-
 	m_getWritedata = "";
 
 	m_lfFlag = Lf_Get;
@@ -60,31 +52,26 @@ int LibcurClient::HttpGetData(const char *url, int timeout , int connect_timeout
 //post请求方法
 int LibcurClient::HttpPostData(const char *url, std::string strLiveID , std::string strLiveData , int timeout, int connect_timeout)
 {  
+    CURLcode res;
 
-        CURLcode res;
+    m_getWritedata = "";
+    long filesize = 0;
 
-        m_getWritedata = "";
-        long filesize = 0;
+    m_lfFlag = Lf_Post;
 
-        m_lfFlag = Lf_Post;
+    struct curl_httppost *formpost = NULL;
+    struct curl_httppost *lastptr = NULL;
+    struct curl_slist *headerlist = NULL;
+    //curl_formadd(&formpost, &lastptr, CURLFORM_PTRNAME, "reqformat", CURLFORM_PTRCONTENTS, "plain", CURLFORM_END);
 
-        struct curl_httppost *formpost = NULL;
-        struct curl_httppost *lastptr = NULL;
-        struct curl_slist *headerlist = NULL;
-        //curl_formadd(&formpost, &lastptr, CURLFORM_PTRNAME, "reqformat", CURLFORM_PTRCONTENTS, "plain", CURLFORM_END);
+    CURLFORMcode mres = curl_formadd(&formpost, &lastptr, CURLFORM_COPYNAME, "ID", CURLFORM_COPYCONTENTS, strLiveID.c_str(), CURLFORM_END);
+    mres = curl_formadd(&formpost, &lastptr, CURLFORM_COPYNAME, "DATA", CURLFORM_COPYCONTENTS, strLiveData.c_str(), CURLFORM_END);
 
-        CURLFORMcode mres = curl_formadd(&formpost, &lastptr, CURLFORM_COPYNAME, "ID", CURLFORM_COPYCONTENTS, strLiveID.c_str(), CURLFORM_END);
-        mres = curl_formadd(&formpost, &lastptr, CURLFORM_COPYNAME, "DATA", CURLFORM_COPYCONTENTS, strLiveData.c_str(), CURLFORM_END);
-
-
-        res = curl_easy_setopt(m_curl, CURLOPT_URL, url);
-        res =curl_easy_setopt(m_curl, CURLOPT_HTTPPOST, formpost);
-
-
-        res =curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, writeCallbackData);
-        res = curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, this);
-
-        res = curl_easy_perform(m_curl);
+    res = curl_easy_setopt(m_curl, CURLOPT_URL, url);
+    res =curl_easy_setopt(m_curl, CURLOPT_HTTPPOST, formpost);
+    res =curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, writeCallbackData);
+    res = curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, this);
+    res = curl_easy_perform(m_curl);
 
     return res;
 }
@@ -95,34 +82,29 @@ size_t  LibcurClient::writeCallbackData(void *buffer, size_t size, size_t nmemb,
 	if (stream) 
 	{
 		LibcurClient* pThis = (LibcurClient*)stream;
-	    return pThis->writeCallback_fun(void *buffer, size_t size, size_t nmemb);
+	    pThis->writeCallback_fun(buffer,size,nmemb);
 	}
-	else 
-	{
-		return size * nmemb;
-	}
+	return size * nmemb;
 }
 
 size_t  LibcurClient::writeCallback_fun(void *buffer, size_t size, size_t nmemb)
 {        
-    switch (m_lfFlag)
+    switch(m_lfFlag)
     {
-
       case Lf_Get:
       {                        
-	       return  WriteCallbackData(buffer, size, nmemb);
+	      return WriteCallbackData(buffer, size, nmemb);
       }
       break;
       case Lf_Post:
       {      
-          return  WriteCallbackData(buffer, size, nmemb);
+         return WriteCallbackData(buffer, size, nmemb);
       }
       break;
       default:
       break;
    }
    return size * nmemb;
-	
 }
 
 size_t LibcurClient::WriteCallbackData(void *buffer, size_t size, size_t nmemb)

@@ -89,11 +89,18 @@ enum RESCODE{
    MALLOC_ERROR   
 };
 
-//定时器任务类型枚举
-enum TIMERTYPE{ 
+//定时器任务类型
+enum TIMER_TYPE{ 
    UPDATEONLINE = 0,
    DELETERECORD,
    CHEDISK
+};
+
+//Http接口返回值类型
+enum PARSE_TYPE{ 
+   GETAPI = 0,
+   REGISTONLINE,
+   UPDATA
 };
 
 //直播参数结构体

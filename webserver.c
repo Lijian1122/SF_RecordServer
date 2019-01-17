@@ -37,7 +37,11 @@ pthread_t deletRecordTask_t;
 //http请求对象
 LibcurClient *m_httpclient, *s_httpclient;
 
-//http监听服务线程
+int parseResdata(string &resdata,  int ret ,PARSE_TYPE m_Type);
+void setTimer(unsigned seconds ,TIMER_TYPE TimerFlag);
+void *stopRecord_fun(void *data);
+
+//http监听服务 线程
 void ev_handler(struct mg_connection *nc, int ev, void *ev_data) 
 {
    switch (ev) 
@@ -157,31 +161,7 @@ end:
   }
 }
 
-//停止录制任务
-void *stopRecord_fun(void *data)
-{
-     RecordSaveRunnable *m_runnable  = (RecordSaveRunnable*)data;
-
-	 int ret = m_runnable->StopRecord();
-	 	 
-	 if(0 == ret)
-     {
-         LOG(INFO)<< "停止录制任务成功 ret:"<<ret<<"   直播ID:"<<m_runnable->m_recordID;                
-     }else
-     {
-         LOG(ERROR) << "停止录制任务失败 ret:"<<ret<<"   直播ID:"<<m_runnable->m_recordID;
-     }
-	 
-	 pthread_mutex_lock(&delete_mutex); 
-     DeleteRecordList.push_back(m_runnable->m_recordID);	  
-	 pthread_mutex_unlock(&delete_mutex);
-	    
-     pthread_detach(pthread_self()); 
-
-     return data;
-}
-
-//录制任务管理线程
+//录制任务管理 线程
 void *recordManage_fun(void *data)
 {
     int ret = 0;
@@ -273,6 +253,123 @@ void *recordManage_fun(void *data)
     return data;
 }
 
+//停止录制任务 线程
+void *stopRecord_fun(void *data)
+{
+     RecordSaveRunnable *m_runnable  = (RecordSaveRunnable*)data;
+
+	 int ret = m_runnable->StopRecord();
+	 	 
+	 if(0 == ret)
+     {
+         LOG(INFO)<< "停止录制任务成功 ret:"<<ret<<"   直播ID:"<<m_runnable->m_recordID;                
+     }else
+     {
+         LOG(ERROR) << "停止录制任务失败 ret:"<<ret<<"   直播ID:"<<m_runnable->m_recordID;
+     }
+	 
+	 pthread_mutex_lock(&delete_mutex); 
+     DeleteRecordList.push_back(m_runnable->m_recordID);	  
+	 pthread_mutex_unlock(&delete_mutex);
+	    
+     pthread_detach(pthread_self()); 
+
+     return data;
+}
+
+//解析http返回json数据
+int parseResdata(string &resdata,  int ret ,PARSE_TYPE m_Type)
+{     
+    if(!resdata.empty())
+    {   
+        json m_object = json::parse(resdata);
+        if(m_object.is_object())
+        {
+            string resCode = m_object.value("code", "oops");
+            ret = atoi(resCode.c_str() );
+            if(0 == ret)
+            {	  
+		        switch(m_Type) 
+                {
+		        	case PARSE_TYPE::GETAPI:  //解析获取API接口
+	                {
+				        string IP = m_object.value("ip", "oops");
+                        string port = m_object.value("port", "oops");
+                        IpPort = IpPort.append(IP).append(":").append(port);
+
+                        ServerCreate = m_object.value("server_create", "oops");
+                        ServerDelete = m_object.value("server_delete", "oops");
+                        ServerSelect = m_object.value("server_select", "oops");
+                        //ServerUpdate = m_object.value("server_update", "oops");
+
+                        liveUpdate = m_object.value("live_update", "oops");
+                        liveSelect = m_object.value("live_select", "oops");
+                        liveUpload = m_object.value("live_upload", "oops");
+
+                        cout<<IpPort  <<ServerCreate  <<ServerDelete  <<ServerSelect  <<liveUpdate <<endl;	 
+			            break;
+	               }
+			       case PARSE_TYPE::REGISTONLINE:  //解析注册录制服务
+	               {
+				       record_serverId = m_object.value("ServerID", "oops");
+                       LOG(INFO)<<"录制服务 record_serverId:"<<record_serverId;		
+			           break;
+	               }
+			       case PARSE_TYPE::UPDATA:  //解析定时上传录制在线
+	               {
+					   break;
+	               }	    
+              }			  
+         }else
+         {
+			 LOG(ERROR)<<"接口返回数据异常 ret:"<< ret<<"  错误信息:"<<m_object.value("msg", "oops");
+         }  
+	  }else
+      {
+		  ret = -1;
+          LOG(ERROR)<<" 接口返回数据不完整";
+	  }		   
+   }else
+   {
+	   ret = -2;
+	   LOG(ERROR) << "Http接口返回 数据为空";   
+   }
+   
+   return ret;
+}
+
+//设置定时器任务
+void setTimer(unsigned seconds ,TIMER_TYPE TimerFlag)
+{
+    struct timeval tv;
+    time_t tt;
+    tv.tv_sec=seconds;
+    tv.tv_usec=0;
+    int err;
+ do{
+     err=select(0,NULL,NULL,NULL,&tv);
+     time(&tt);
+	 
+	 switch (TimerFlag) 
+     {
+        case TIMER_TYPE::UPDATEONLINE:  //定时上传录制在线
+	    {
+			 updateOnline_fun();
+			 break;
+	    }
+		case TIMER_TYPE::DELETERECORD: //定时遍历及删除已停止的录制任务
+	    {
+			 updateOnline_fun();
+			 break;
+	    }
+		case TIMER_TYPE::CHEDISK:  //定时检测磁盘空间
+	    {
+			 updateOnline_fun();
+			 break;
+	    }
+	 }
+  }while(err<0 && errno==EINTR);
+}
 //遍历及删除已停止的录制任务
 void deleteRecord_fun()
 {
@@ -340,75 +437,28 @@ void updateOnline_fun()
 	int main_ret = s_httpclient->HttpGetData(updateOnlineUrl.c_str());
     if(0 == main_ret)
     {
-		std::string res = s_httpclient->GetResdata();
-       
-        if(!(s_httpclient->GetResdata()).empty())
-        {
-           json m_object = json::parse(s_httpclient->GetResdata());
-           if(m_object.is_object())
-           {
-               string resCode = m_object.value("code", "oops");
-               main_ret = atoi(resCode.c_str() );
-               if(0 != main_ret)
-               {
-                  std::cout<<main_ret<<endl;
-                  LOG(ERROR) << "定时上在线状态失败  main_ret:"<< main_ret <<" "<<"错误信息:"<<m_object.at("msg");   
-               }
-            }
-       }else
-       {
-       	  LOG(ERROR) << "获取定时上传录制服务数据为空!";
-       }    
+        main_ret = parseResdata(s_httpclient->GetResdata(), main_ret ,PARSE_TYPE::UPDATA);
+		if(0 != main_ret)
+		{
+		  LOG(ERROR) << "解析定时返回数据失败  main_ret:"<<main_ret; 
+		}
     }else
     {
        //LOG(ERROR) << "调用定时上在线状态接口失败  main_ret:"<<main_ret;  
     }	
 }
 
-//设置定时器任务
-void setTimer(unsigned seconds ,TIMERTYPE TimerFlag)
-{
-    struct timeval tv;
-    time_t tt;
-    tv.tv_sec=seconds;
-    tv.tv_usec=0;
-    int err;
- do{
-     err=select(0,NULL,NULL,NULL,&tv);
-     time(&tt);
-	 
-	 switch (TimerFlag) 
-     {
-        case TIMERTYPE::UPDATEONLINE:  //定时上传录制在线
-	    {
-			 updateOnline_fun();
-			 break;
-	    }
-		case TIMERTYPE::DELETERECORD: //定时遍历及删除已停止的录制任务
-	    {
-			 updateOnline_fun();
-			 break;
-	    }
-		case TIMERTYPE::CHEDISK:  //定时检测磁盘空间
-	    {
-			 updateOnline_fun();
-			 break;
-	    }
-	 }
-  }while(err<0 && errno==EINTR);
-}
-
-//定时删除已停止的录制任务
+//定时删除已停止的录制任务 线程
 void *deletRecord_fun(void *data)
 {
    while(record_flag)
    {  
-      setTimer(60 * 30, TIMERTYPE::DELETERECORD);
+      setTimer(60 * 30, TIMER_TYPE::DELETERECORD);
    }
    return data;
 }
 
-//定时上传录制在线
+//定时上传录制在线 线程
 void *httpTime_fun(void *pdata)
 {
    s_httpclient = new LibcurClient;
@@ -425,7 +475,7 @@ void *httpTime_fun(void *pdata)
    //录制服务在线状态定时上传
    while(record_flag)
    {   
-	  setTimer(5 , TIMERTYPE::UPDATEONLINE);   
+	  setTimer(5 , TIMER_TYPE::UPDATEONLINE);   
    }
    if(NULL != s_httpclient)
    {
@@ -435,87 +485,17 @@ void *httpTime_fun(void *pdata)
    return pdata;
 }
 
-//定时检测磁盘
+//定时检测磁盘 线程
 void *checkDisk_fun(void *data)
 {
    while(record_flag)
    {  
-      setTimer(60 * 30 , TIMERTYPE::CHEDISK);
+      setTimer(60 * 30 , TIMER_TYPE::CHEDISK);
    }
    return data;
 }
 
-
-//创建日志文件夹
-int CreateLogFileDir(const char *sPathName)  
-{  
-      char DirName[256];  
-      strcpy(DirName, sPathName);  
-      int i,len = strlen(DirName);
-      for(i=1; i<len; i++)  
-      {  
-          if(DirName[i]=='/')  
-          {  
-              DirName[i] = 0; 
-              if(access(DirName, F_OK)!=0)  
-              {  
-                   
-                  if(mkdir(DirName, 0755)==-1)  
-                  {   
-                      printf("mkdir log error\n");
-                      LOG(ERROR) << "创建日志文件夹失败";					  
-                      return -1;   
-                  }                   
-              }  
-              DirName[i] = '/';  
-          }  
-      }  
-      return 0;  
-}
-
-//解析http接口返回json数据
-int parseHttpInterface(string &resdata)
-{     
-    int main_ret = 0;     
-    json m_object = json::parse(m_httpclient->GetResdata());
-    if(m_object.is_object())
-    {
-      string resCode = m_object.value("code", "oops");
-      main_ret = atoi(resCode.c_str() );
-      if(0 == main_ret)
-      {
-		 string IP = m_object.value("ip", "oops");
-         string port = m_object.value("port", "oops");
-         IpPort = IpPort.append(IP).append(":").append(port);
-
-         ServerCreate = m_object.value("server_create", "oops");
-         ServerDelete = m_object.value("server_delete", "oops");
-         ServerSelect = m_object.value("server_select", "oops");
-         //ServerUpdate = m_object.value("server_update", "oops");
-
-         liveUpdate = m_object.value("live_update", "oops");
-         liveSelect = m_object.value("live_select", "oops");
-         liveUpload = m_object.value("live_upload", "oops");
-
-         cout<<IpPort  <<ServerCreate  <<ServerDelete  <<ServerSelect  <<liveUpdate <<endl;
-		    
-      }else
-      { 
-          std::cout<<main_ret<<endl;
-          LOG(ERROR) << "获取Http API数据失败 main_ret:"<< main_ret <<" "<<"错误信息:"<<m_object.at("msg");
-          return main_ret;  
-      }
-      return main_ret;
-	  
-    }else
-    {
-        main_ret = 2;
-        return main_ret;
-    }
-  
-}
-
-//http服务监听线程
+//http服务监听 线程
 void *httpServer_fun(void *pdata)
 {
    printf("httpServer_fun :[tid: %ld]\n", syscall(SYS_gettid));
@@ -545,7 +525,33 @@ void *httpServer_fun(void *pdata)
 
    return pdata;
  }
-
+ 
+//创建日志文件夹
+int CreateLogFileDir(const char *sPathName)  
+{  
+      char DirName[256];  
+      strcpy(DirName, sPathName);  
+      int i,len = strlen(DirName);
+      for(i=1; i<len; i++)  
+      {  
+          if(DirName[i]=='/')  
+          {  
+              DirName[i] = 0; 
+              if(access(DirName, F_OK)!=0)  
+              {  
+                   
+                  if(mkdir(DirName, 0755)==-1)  
+                  {   
+                      printf("mkdir log error\n");
+                      LOG(ERROR) << "创建日志文件夹失败";					  
+                      return -1;   
+                  }                   
+              }  
+              DirName[i] = '/';  
+          }  
+      }  
+      return 0;  
+}
 //启动服务
 int startServer(void)
 {
@@ -580,22 +586,16 @@ int startServer(void)
     main_ret = m_httpclient->HttpGetData(url.c_str());
     if(0 == main_ret)
     {
-	   if(!(m_httpclient->GetResdata()).empty())
-       {
-           string resdata = m_httpclient->GetResdata();
-           if(0 !=  parseHttpInterface(resdata))
-           {
-               LOG(ERROR) << "解析Http API数据失败";
-               return main_ret;
-           }
-       }else
-       {
-       	    LOG(ERROR) << "获取Http API数据为空";
-       	    return main_ret;
-       }
+	   std::string resData = m_httpclient->GetResdata();
+	   main_ret = parseResdata(resData, main_ret ,PARSE_TYPE::GETAPI);
+	   if(0 != main_ret)
+	   {
+		   LOG(ERROR) << "解析Http API接口 数据失败  main_ret:"<<main_ret; 
+		   return main_ret;
+	   }
     }else
     {
-		LOG(ERROR) << "调用获取Http API接口失败   main_ret:"<<main_ret;  
+		LOG(ERROR) << "调用Http API接口失败   main_ret:"<<main_ret;  
         return main_ret;
     }
  
@@ -612,38 +612,18 @@ int startServer(void)
    main_ret = m_httpclient->HttpGetData(url.c_str());
    if(0 == main_ret)
    {
-	   std::string res = m_httpclient->GetResdata();
-       if(!(m_httpclient->GetResdata()).empty())
-       {
-          json m_object = json::parse(m_httpclient->GetResdata());
-          if(m_object.is_object())
-          {
-             string resCode = m_object.value("code", "oops");
-             main_ret = atoi(resCode.c_str());
-
-             if(0 == main_ret)
-             {
-				 record_serverId = m_object.value("ServerID", "oops");
-                 printf("serverId :%s\n", record_serverId.c_str()); 
-                 LOG(INFO)<<"录制服务 record_serverId:"<<record_serverId;				 
-              }else
-              {                
-                 std::cout<<main_ret<<endl;
-                 LOG(ERROR)<<"注册录制服务失败 main_ret:"<< main_ret <<" "<<"错误信息:"<<m_object.value("msg", "oops");
-                 //return main_ret ;
-              }
-         }
-       }else
-       { 
-       	    LOG(ERROR) << "获取注册录制服务数据为空 ";
-       	    return main_ret;
-       }
-    }else
-    {
-         cout<<main_ret<<endl;
-         LOG(ERROR) << "注册录制服务失败  main_ret:"<<main_ret;  
-         //return main_ret;
-    }
+	  std::string resData = m_httpclient->GetResdata();
+	  main_ret = parseResdata(resData, main_ret ,PARSE_TYPE::REGISTONLINE);
+	  if(0 != main_ret)
+	  {
+		   LOG(ERROR) << "解析注册录制 数据失败 main_ret:"<<main_ret; 
+		   return main_ret;
+	  }	  
+   }else
+   {  
+      LOG(ERROR) << "调用注册录制服务 失败  main_ret:"<<main_ret;  
+      //return main_ret;
+   }
 
     //往消息队列里面写数据,发给监控进程
     // int msqid = getMsgQueue();
@@ -837,7 +817,6 @@ int main(int argc, char* argv[])
    printf("server starting\n");
    LOG(INFO) << "server start: "<<"main_ret:"<<main_ret;
 
- 
    //停止录制服务
    main_ret = stopServer();
    if(0 == main_ret)
