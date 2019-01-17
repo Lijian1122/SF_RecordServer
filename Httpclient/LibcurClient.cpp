@@ -85,7 +85,7 @@ size_t  LibcurClient::writeCallbackData(void *buffer, size_t size, size_t nmemb,
 	if(stream) 
 	{
 		LibcurClient* pThis = (LibcurClient*)stream;
-	    WriteCallback_fun(void *buffer, size_t size, size_t nmemb);
+	    pThis->WriteCallback_fun(buffer, size, nmemb);
 	}
 	return size * nmemb;
 }

@@ -1,8 +1,0 @@
-Log file created at: 2019/01/17 12:40:31
-Running on machine: live2.sanhai
-Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
-E0117 12:40:31.546427 22822 webserver.c:328] 接口返回数据异常 ret:19  错误信息:UNIQUE constraint failed: server_info.serverApi
-E0117 12:40:31.547607 22822 webserver.c:622] 解析注册录制 数据失败 main_ret:19
-I0117 12:40:31.548192 22822 webserver.c:821] server start: main_ret:0
-I0117 12:40:31.548516 22824 webserver.c:511] Http服务启动  port:8081
-E0117 12:40:31.549346 22824 webserver.c:516] Http服务 监听端口失败
