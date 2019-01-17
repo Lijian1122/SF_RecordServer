@@ -371,7 +371,7 @@ void setTimer(unsigned seconds ,TIMER_TYPE TimerFlag)
 void deleteRecord_fun()
 {
 	pthread_mutex_lock(&delete_mutex);
-	printf("delete record...\n")
+	printf("delete record...\n");
 	std::list<std::string>::iterator iter;
 	for(iter= DeleteRecordList.begin(); iter != DeleteRecordList.end();)
 	{
