@@ -351,7 +351,7 @@ int RecordSaveRunnable::BrokenlineReconnectionInit(RTMP *m_pRtmp)
 
 
 //重连rtmp,如小于三次,返回0;否则返回1
-int BrokenlineReconnection(int re_Connects)
+int RecordSaveRunnable::BrokenlineReconnection(int re_Connects)
 {
 	int ret = 0;
 	if(re_Connects < 3)

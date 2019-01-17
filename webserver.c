@@ -366,11 +366,12 @@ void setTimer(unsigned seconds ,TIMER_TYPE TimerFlag)
 	 }
   }while(err<0 && errno==EINTR);
 }
+
 //遍历及删除已停止的录制任务
 void deleteRecord_fun()
 {
 	pthread_mutex_lock(&delete_mutex);
-	
+	printf("delete record...\n")
 	std::list<std::string>::iterator iter;
 	for(iter= DeleteRecordList.begin(); iter != DeleteRecordList.end();)
 	{
@@ -450,7 +451,7 @@ void *deletRecord_fun(void *data)
 {
    while(record_flag)
    {  
-      setTimer(60, TIMER_TYPE::DELETERECORD);
+      setTimer(30, TIMER_TYPE::DELETERECORD);
    }
    return data;
 }
@@ -689,7 +690,7 @@ int startServer(void)
 //停止服务
 int stopServer(void)
 {   
- 
+
     int main_ret = 0;
 
     //注册录制服务离线接口
