@@ -5,15 +5,17 @@ LibcurClient::LibcurClient()
 	
 	m_lfFlag = Lf_Get;
 	
-	curl_global_init(CURL_GLOBAL_ALL); // 首先全局初始化CURL
-	m_curl = curl_easy_init(); // 初始化CURL句柄
+	//首先全局初始化CURL
+	curl_global_init(CURL_GLOBAL_ALL); 
+	
+	//初始化CURL句柄
+	m_curl = curl_easy_init(); 
 	
 	if(NULL == m_curl)
 	{
 		printf("(申请内存失败!\n");
 		curl_easy_cleanup(m_curl);
 	}
-
 	m_getWritedata = "";
 }
 
@@ -31,7 +33,7 @@ int LibcurClient::HttpGetData(const char *url, int timeout , int connect_timeout
 	res = curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, writeCallbackData);
 	// 设置自定义参数(回调函数的第四个参数)
 
-	res = curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, this); //&m_getWritedata
+	res = curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, this); 
 
 	//支持重定向
 	res = curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1);
@@ -46,12 +48,12 @@ int LibcurClient::HttpGetData(const char *url, int timeout , int connect_timeout
     res = curl_easy_perform(m_curl);
 
 	return res;
-
 }
 
 //post请求方法
 int LibcurClient::HttpPostData(const char *url, std::string strLiveID , std::string strLiveData , int timeout, int connect_timeout)
 {  
+
     CURLcode res;
 
     m_getWritedata = "";
@@ -69,9 +71,10 @@ int LibcurClient::HttpPostData(const char *url, std::string strLiveID , std::str
 
     res = curl_easy_setopt(m_curl, CURLOPT_URL, url);
     res =curl_easy_setopt(m_curl, CURLOPT_HTTPPOST, formpost);
+
     res =curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, writeCallbackData);
     res = curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, this);
-    res = curl_easy_perform(m_curl);
+	res = curl_easy_perform(m_curl);
 
     return res;
 }
@@ -79,32 +82,32 @@ int LibcurClient::HttpPostData(const char *url, std::string strLiveID , std::str
 //结果回调
 size_t  LibcurClient::writeCallbackData(void *buffer, size_t size, size_t nmemb, void *stream)
 {
-	if (stream) 
+	if(stream) 
 	{
 		LibcurClient* pThis = (LibcurClient*)stream;
-	    pThis->writeCallback_fun(buffer,size,nmemb);
+	    WriteCallback_fun(void *buffer, size_t size, size_t nmemb);
 	}
 	return size * nmemb;
 }
 
-size_t  LibcurClient::writeCallback_fun(void *buffer, size_t size, size_t nmemb)
+size_t  LibcurClient::WriteCallback_fun(void *buffer, size_t size, size_t nmemb)
 {        
-    switch(m_lfFlag)
+    switch (m_lfFlag)
     {
       case Lf_Get:
       {                        
-	      return WriteCallbackData(buffer, size, nmemb);
-      }
-      break;
+	     WriteCallbackData(buffer, size, nmemb);
+		 break;
+      }    
       case Lf_Post:
       {      
-         return WriteCallbackData(buffer, size, nmemb);
-      }
-      break;
+         WriteCallbackData(buffer, size, nmemb);
+		 break;
+      } 
       default:
-      break;
-   }
-   return size * nmemb;
+       break;
+    }
+    return size * nmemb;	
 }
 
 size_t LibcurClient::WriteCallbackData(void *buffer, size_t size, size_t nmemb)
@@ -133,6 +136,5 @@ LibcurClient::~LibcurClient()
 	{
 		curl_easy_cleanup(m_curl);
 	}
-
 	curl_global_cleanup();
 }

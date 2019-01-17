@@ -130,8 +130,8 @@ int RecordSaveRunnable::BrokenlineReconnectionInit(RTMP *m_pRtmp)
 
      if(0 != ret)
      {
-          LOG(ERROR) << "新建文件失败  ret:"<<ret<<"  直播ID:"<<m_recordID;
-          return ret;
+        LOG(ERROR) << "新建文件失败  ret:"<<ret<<"  直播ID:"<<m_recordID;
+        return ret;
      }  
      return ret;
 }
@@ -139,7 +139,6 @@ int RecordSaveRunnable::BrokenlineReconnectionInit(RTMP *m_pRtmp)
 //启动录制任务
 int RecordSaveRunnable::StartRecord()
 {
-	
 	  //查询直播信息及拉流URL
       std::string resData ,resCodeInfo, liveinfo;
       string urlStr = IpPort;
@@ -268,81 +267,78 @@ int RecordSaveRunnable::CreateFileDir(const char *sPathName)
 //新建并打开文件
 int RecordSaveRunnable::CreateFile(std::string &resData)
 {
-  int ret = 0;
-  int i = 0;
-  char aFileStr[1024] = {0};
-  char vFileStr[1024] = {0};
-  char wFileStr[1024] ={0};
+     int ret = 0;
+     int i = 0;
+     char aFileStr[1024] = {0};
+     char vFileStr[1024] = {0};
+     char wFileStr[1024] ={0};
  
-  //file dir
-  char fileDir[1024] = {0};  
+     //file dir
+     char fileDir[1024] = {0};  
  
-  sprintf(fileDir ,"%s%s%s",FILEFOLDER, m_recordID.c_str(),"/");
+     sprintf(fileDir ,"%s%s%s",FILEFOLDER, m_recordID.c_str(),"/");
 
-  ret = CreateFileDir(fileDir);
-  if(0 != ret)
-  {
-    LOG(ERROR)<<" 创建file 文件夹失败  直播ID:"<<m_recordID;
-    return ret;   
-  }
+     ret = CreateFileDir(fileDir);
+     if(0 != ret)
+     {
+       LOG(ERROR)<<" 创建file 文件夹失败  直播ID:"<<m_recordID;
+       return ret;   
+     }
   
-  printf("fileDir: %s\n", fileDir);
 
-  sprintf(aFileStr ,"%s%s%s",fileDir, m_recordID.c_str(), ".aac");
+     sprintf(aFileStr ,"%s%s%s",fileDir, m_recordID.c_str(), ".aac");
 
-  sprintf(vFileStr ,"%s%s%s",fileDir, m_recordID.c_str(), ".h264");
+     sprintf(vFileStr ,"%s%s%s",fileDir, m_recordID.c_str(), ".h264");
 
-  sprintf(wFileStr ,"%s%s%s",fileDir, m_recordID.c_str(), ".json");
+     sprintf(wFileStr ,"%s%s%s",fileDir, m_recordID.c_str(), ".json");
   
-  while((access(aFileStr, F_OK)) != -1)
-  {
-     i++;
-     memset(aFileStr,0,1024);
-     sprintf(aFileStr,"%s%s%s%d%s",fileDir,m_recordID.c_str(),"(+",i,").aac");
+     while((access(aFileStr, F_OK)) != -1)
+     {
+         i++;
+         memset(aFileStr,0,1024);
+         sprintf(aFileStr,"%s%s%s%d%s",fileDir,m_recordID.c_str(),"(+",i,").aac");
 
-     memset(vFileStr,0,1024);
-     sprintf(vFileStr,"%s%s%s%d%s",fileDir,m_recordID.c_str(),"(+",i,").h264");
+         memset(vFileStr,0,1024);
+         sprintf(vFileStr,"%s%s%s%d%s",fileDir,m_recordID.c_str(),"(+",i,").h264");
 
-     memset(wFileStr,0,1024);
-     sprintf(wFileStr,"%s%s%s%d%s",fileDir,m_recordID.c_str(),"(+",i,").json");
-  }
+        memset(wFileStr,0,1024);
+        sprintf(wFileStr,"%s%s%s%d%s",fileDir,m_recordID.c_str(),"(+",i,").json");
+     }
 
-  printf("文件名: %s %s %s \n", aFileStr, vFileStr, wFileStr);
-  LOG(INFO) << "文件名: "<<aFileStr<<"  "<<vFileStr<<"  "<<wFileStr;
+     //printf("文件名: %s %s %s \n", aFileStr, vFileStr, wFileStr);
+     LOG(INFO) << "文件名: "<<aFileStr<<"  "<<vFileStr<<"  "<<wFileStr;
 
-  afile = fopen(aFileStr,"ab+");
-  if(NULL == afile)
-  {
-      ret = errno;
-      LOG(ERROR)<<" 打开aac文件失败  ret:"<<ret<<"  reason:"<<strerror(ret)<<"  直播ID:"<<m_recordID;
-      return ret;
-  }
+    afile = fopen(aFileStr,"ab+");
+    if(NULL == afile)
+    {
+        ret = errno;
+        LOG(ERROR)<<" 打开aac文件失败  ret:"<<ret<<"  reason:"<<strerror(ret)<<"  直播ID:"<<m_recordID;
+        return ret;
+    }
 
-  vfile = fopen(vFileStr,"ab+");
-  if(NULL == vfile)
-  {
-     ret = errno;
-     LOG(ERROR)<<" 打开h264文件失败  ret:"<<ret<<"  reason:"<<strerror(ret)<<"  直播ID:"<<m_recordID;;
-     return ret;
+    vfile = fopen(vFileStr,"ab+");
+    if(NULL == vfile)
+    {
+       ret = errno;
+       LOG(ERROR)<<" 打开h264文件失败  ret:"<<ret<<"  reason:"<<strerror(ret)<<"  直播ID:"<<m_recordID;;
+       return ret;
+    }
 
-  }
+    wfile = fopen(wFileStr,"ab+");
+    if(NULL == wfile)
+    {
+       ret = errno;
+       LOG(ERROR)<<" 打开json文件失败  ret:"<<ret<<"  reason:"<<strerror(ret)<<"  直播ID:"<<m_recordID;;
+       return ret;
+    }
 
-  wfile = fopen(wFileStr,"ab+");
-  if(NULL == wfile)
-  {
-     ret = errno;
-     LOG(ERROR)<<" 打开json文件失败  ret:"<<ret<<"  reason:"<<strerror(ret)<<"  直播ID:"<<m_recordID;;
-     return ret;
-  }
-
-  if(!resData.empty())
-  {
-      fwrite(resData.c_str(), 1, resData.size(), wfile);
-  }
+    if(!resData.empty())
+    {
+       fwrite(resData.c_str(), 1, resData.size(), wfile);
+    }
    
-  LOG(INFO) << "打开所有文件成功  直播ID:"<<m_recordID;
-
-  return ret;
+    LOG(INFO) << "打开所有文件成功  直播ID:"<<m_recordID;
+    return ret;
 
 }
 
@@ -411,17 +407,18 @@ begin:
          goto end;
      }
    
-    if(!RTMP_ConnectStream(m_pRtmp, 0))
-    {	
+     if(!RTMP_ConnectStream(m_pRtmp, 0))
+     {	
          LOG(ERROR) << "拉流连接失败  直播ID:"<<m_recordID;
          m_ret = 5;
          goto end;
-    }
+     }
     
-    LOG(INFO) << "录制开始  直播ID:"<<m_recordID;
+     LOG(INFO) << "录制开始  直播ID:"<<m_recordID;
 
-    while(runningp) 
-    {
+     while(runningp) 
+     {
+		 
        int nRead = RTMP_Read(m_pRtmp, buf, bufsize);  
        
        if(nRead > 0)
@@ -450,14 +447,15 @@ begin:
 		  
 		  if(0 != m_ret) //返回值不为0,写入异常
 		  {
-			 if(m_ret == 1)
+			 if(1 == m_ret)
 		     {
 			    LOG(ERROR) << " Rtmp数据缓冲区空间使用率已大于0.5  直播ID:"<<m_recordID; 
-		     }else if(m_ret == 2)
+				
+		     }else if(2 == m_ret)
 		     {
 			    LOG(ERROR) << " Rtmp数据缓冲区空间不足  "<<nRead<<"字节未写入 直播ID:"<< m_recordID;
 		     }  
-		  }	 
+		 }	 
      }else 
      {  
         //rtmp读数据超时，一直读不到数据
@@ -610,11 +608,11 @@ begin:
        }
      } 
   }   
+     
+end:
 
    //设置直播结束flag   
    m_endRecvFlag = true;
-           
-end:
 
    if(RTMP_IsConnected(m_pRtmp))
    {
@@ -767,19 +765,13 @@ void *RecordSaveRunnable::rtmpSave_f()
 	       *(s+2) = *(tagSize_buf+1);
 	       *(s+3) = *(tagSize_buf);
 				
-		   if(m_tagSize == tagHeadSize + tagdataSize)
-	       {
-				m_ret =  WriteFile(tagHead_buf, tagData_buf, tagdataSize);
+		   m_ret =  WriteFile(tagHead_buf, tagData_buf, tagdataSize);
 				
-				if(m_ret != 0)
-			    {
-					LOG(ERROR) << "写入tag长度失败共:  "<< tagdataSize<<"字节未写入 直播ID:"<<m_recordID;
-				}
-				
-		   }else
-		   { 
-			    LOG(ERROR) << "解析tag长度错误,共:  "<< tagdataSize<<"字节未写入 直播ID:"<<m_recordID;   
-		   }   
+	       if(m_ret != 0)
+		   {
+			  LOG(ERROR) << "写入tag长度失败共:  "<< tagdataSize<<"字节未写入 直播ID:"<<m_recordID;
+		   }
+			  
            //重置Tag头flag				
 	       tagFlag = true;	
 	   }
@@ -873,8 +865,8 @@ int RecordSaveRunnable::UpdataRecordflag(LibcurClient *http_client ,int flag)
 
     if(0 != m_ret)
     {
-      LOG(ERROR)<<"调用更新录制状态接口失败 直播ID"<<m_recordID;
-	  return m_ret;
+        LOG(ERROR)<<"调用更新录制状态接口失败  直播ID"<<m_recordID;
+	    return m_ret;
     }
 
     std::string resData = http_client->GetResdata();

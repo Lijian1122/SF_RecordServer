@@ -54,8 +54,7 @@ class CCycleBuffer
     int m_nBufSize;  //缓冲区大小
     int m_nReadPos;  //读指针位置
     int m_nWritePos; //写指针位置
-    int test;
-
+   
     bool m_bEmpty;
     bool m_bFull;
 };

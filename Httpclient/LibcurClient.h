@@ -23,7 +23,7 @@ using namespace std;
 class LibcurClient
 {
 public:
-	
+
 	LibcurClient();
 
 	~LibcurClient();
@@ -34,10 +34,11 @@ public:
 	//post请求方法
     int HttpPostData(const char *url, std::string strLiveID , std::string strLiveData , int timeout = 10, int connect_timeout = 10);
 	
-	//写结果回调
-	static size_t  writeCallbackData(void *buffer, size_t size, size_t nmemb, void *stream);
+	//写结果静态方法
+	static size_t writeCallbackData(void *buffer, size_t size, size_t nmemb, void *stream);
 	
-	size_t  writeCallback_fun(void *buffer, size_t size, size_t nmemb);
+	//写回调函数
+	size_t WriteCallback_fun(void *buffer, size_t size, size_t nmemb);
 
 	size_t WriteCallbackData(void *buffer, size_t size, size_t nmemb);
 

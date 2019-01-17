@@ -61,28 +61,27 @@ void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
     }
     case MG_EV_HTTP_REQUEST: 
     {
-
       struct http_message *hm = (struct http_message *) ev_data;
       char addr[32];
       mg_sock_addr_to_str(&nc->sa, addr, sizeof(addr),
                           MG_SOCK_STRINGIFY_IP | MG_SOCK_STRINGIFY_PORT);
       
-	  //获取Url字符串长度
-	  char url[(int)hm->uri.len];
-      sprintf(url, "%.*s",(int)hm->uri.len,hm->uri.p);
+	  //解析http请求方法名
+	  char methodStr[(int)hm->uri.len];
+      sprintf(methodStr, "%.*s",(int)hm->uri.len,hm->uri.p);
 	  
       RESCODE ret = RESCODE::NO_ERROR;
 	  
-      if(strcmp(url, "/live/record") == 0)
+      if(strcmp(methodStr, "/live/record") == 0)
       {    
-         LOG(INFO) << "开始解析url:"<<url;
+         LOG(INFO) << "开始解析:"<<methodStr;
 		 
-         //处理参数
-		 int parmlen = (int)hm->query_string.len; //获取参数字符长度
+         //解析http请求参数
+		 int parmlen = (int)hm->query_string.len;
          char parmStr[parmlen];
          sprintf(parmStr, "%.*s",parmlen,hm->query_string.p);
 		 
-		 printf("url参数长度：%d  %s",parmlen ,parmStr);
+		 printf("url参数长度：%d  %s\n",parmlen ,parmStr);
 		     
          char *liveId_buf = (char*)malloc(sizeof(char)*parmlen);
          memset(liveId_buf, 0 ,sizeof(char)*parmlen);
@@ -104,8 +103,7 @@ void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
 		 
          mg_get_http_var(&hm->query_string, "liveId", liveId_buf, parmlen); //获取liveID	 
 	     mg_get_http_var(&hm->query_string, "type", type_buf, parmlen);  //获取录制命令
-		 
-         printf("获取参数 : %s %s\n",liveId_buf ,type_buf);
+		    
          LOG(INFO) << "获取参数 : "<<liveId_buf<<"  "<<type_buf;   
 
          //目前录制命令只支持0 1
@@ -230,24 +228,25 @@ void *recordManage_fun(void *data)
 				 pthread_mutex_unlock(&record_mutex);
                  LOG(ERROR) << "未找到该录制任务  直播ID:"<<pdata->liveID;    
 			}
-        }
+     }
 		
-        if(NULL != pdata->liveID)
-        {
-             free(pdata->liveID);
-             pdata->liveID = NULL;
-        }
-		if(NULL != pdata->liveType)
-		{
-			 free(pdata->liveType);
-             pdata->liveType = NULL;
-		}
+     if(NULL != pdata->liveID)
+     {
+         free(pdata->liveID);
+         pdata->liveID = NULL;
+     }
+     if(NULL != pdata->liveType)
+     {
+	    free(pdata->liveType);
+        pdata->liveType = NULL;
+     }
 		
-        liveParmQueue.pop();
+     liveParmQueue.pop();
        
-        sem_post(&bin_blank);  
-    }
-    return data;
+     sem_post(&bin_blank); 
+	 
+   }
+   return data;
 }
 
 //停止录制任务 线程
@@ -451,7 +450,7 @@ void *deletRecord_fun(void *data)
 {
    while(record_flag)
    {  
-      setTimer(60 * 30, TIMER_TYPE::DELETERECORD);
+      setTimer(60, TIMER_TYPE::DELETERECORD);
    }
    return data;
 }
