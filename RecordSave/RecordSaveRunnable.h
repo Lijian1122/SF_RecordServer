@@ -5,6 +5,7 @@
 时间：2018-09-17
 功能：利用rtmpdump庫生成RecordSave.so,接收rtmp传输來的数据保存成.h264文件,.acc文件,.json文件
 
+V0.0.2
 2019.01.02 重新整理Rtmp断线重连逻辑，解决断线重连时候软件崩溃的bug，主要在接收线程解析flv 头部flag没有初始化
 2019.01.08 修改Rtmp接收数据缓冲区，队列改为环形缓冲区，解决服务在解析Tag数据崩溃的bug
 2019.01.09 重新整理代码
@@ -85,9 +86,12 @@ protected:
 	static void *Save_fun(void *arg);
 	void *rtmpSave_f();
 	
-	//断线重连初始化
+	//重连rtmp初始化
     int BrokenlineReconnectionInit(RTMP *m_pRtmp);
-   
+	
+	//重连rtmp,如重连大于三次，结束录制任务 否则继续重连
+    int BrokenlineReconnection(int re_Connects);
+	
 private:
 
     //获取完整一个Tag数据写文件

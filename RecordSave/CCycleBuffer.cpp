@@ -54,7 +54,7 @@ int CCycleBuffer::write(char* buf,int count)
 		      //在从头拷贝剩下的数据
               memcpy(m_pBuf, buf + leftcount, m_nWritePos); 		
               count = leftcount + m_nWritePos;      			
-		    }	  	 
+		   }	  	 
         }     		  
 		//判断缓冲区剩余空间是否大于50%
         if(leftsize*1.0/m_nBufSize > 0.5)  
@@ -104,7 +104,6 @@ int CCycleBuffer::read(char* buf,int count)
 	     }else
 	     {
 		     leftcount = m_nBufSize - m_nReadPos;
-
              if(leftcount > count && leftcount == count) //剩余数据够读取
              {
 		        leftcount = ReadLeftData(m_nReadPos,buf,count);
@@ -163,7 +162,7 @@ int CCycleBuffer::getRetainLength()
 { 
    if(m_bEmpty) 
    { 
-        return 0; 	
+       return 0; 	
 		
    }else if(m_bFull) 
    { 

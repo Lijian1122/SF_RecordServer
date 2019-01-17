@@ -58,10 +58,12 @@ int RecordSaveRunnable::ParseJsonInfo(std::string &jsonStr ,std::string &resCode
            if(0 == main_ret)
            {
 			  resCodeInfo = m_object.value("msg", "oops");	
+			  
 			  if(!urlflag)
 			  {
 				 liveinfo = m_object.value("liveFlag", "oops");
                  return main_ret;
+				 
 			  }else
 			  {
                  auto it_liveinfo = m_object.find("live_info");
@@ -86,54 +88,21 @@ int RecordSaveRunnable::ParseJsonInfo(std::string &jsonStr ,std::string &resCode
               std::cout<<main_ret<<endl;
               resCodeInfo = m_object.value("msg", "oops");
 
-              LOG(ERROR)<<" 返回http接口失败  ret:"<<main_ret<<"  resCodeInfo:"<<resCodeInfo<<"  直播ID:"<<m_recordID;
+              LOG(ERROR)<<" Http接口返回异常  ret:"<<main_ret<<"  resCodeInfo:"<<resCodeInfo<<"  直播ID:"<<m_recordID;
               return main_ret;	          
          }
        }else
        {
-          LOG(ERROR)<<" 返回http 接口数据不全 直播ID:"<<m_recordID;
+          LOG(ERROR)<<" Http接口返回数据不全 直播ID:"<<m_recordID;
           main_ret = 1;
           return main_ret;
        }
     }else
     {
-        LOG(ERROR) << "获取http 接口数据为空  直播ID:"<<m_recordID;
+        LOG(ERROR) << "Http接口返回数据为空  直播ID:"<<m_recordID;
         int main_ret = 2;
         return main_ret;
     }
-}
-
-
-//rtmp断线重连初始化
-int RecordSaveRunnable::BrokenlineReconnectionInit(RTMP *m_pRtmp)
-{
-     if(RTMP_IsConnected(m_pRtmp))
-     {
-         RTMP_Close(m_pRtmp);
-     }                 
-     if(NULL != m_pRtmp)
-     {
-         RTMP_Free(m_pRtmp);
-         m_pRtmp = NULL;
-     }
-	 
-     aacTagNum = 0;
-
-     firstflag = true;  
-
-     fclose(afile);
-     fclose(vfile);
-     fclose(wfile);
-
-     string data = "";
-     int ret = CreateFile(data);
-
-     if(0 != ret)
-     {
-        LOG(ERROR) << "新建文件失败  ret:"<<ret<<"  直播ID:"<<m_recordID;
-        return ret;
-     }  
-     return ret;
 }
 
 //启动录制任务
@@ -188,7 +157,7 @@ int RecordSaveRunnable::StartRecord()
           return ret;
       }
 
-      LOG(INFO) << "已启动录制读写线程   直播ID:"<<m_recordID;
+      LOG(INFO) << "已启动录制读写线程  直播ID:"<<m_recordID;
        
       return ret;
 } 
@@ -205,7 +174,7 @@ int RecordSaveRunnable::StopRecord()
           LOG(ERROR) << "销毁读线程失败  ret:"<<resCode<<"  直播ID:"<<m_recordID;
           return resCode;
       }
-      //printf("已经销毁读线程\n");
+      printf("已经销毁读线程\n");
 
       resCode = pthread_join(consumer_t,NULL);
 
@@ -214,7 +183,7 @@ int RecordSaveRunnable::StopRecord()
           LOG(ERROR) << "销毁写线程失败  ret:"<<resCode<<" 直播ID:"<<m_recordID;
           return resCode;
       }
-      //printf("已经销毁写线程\n");
+      printf("已经销毁写线程\n");
 	    
       if(NULL != afile)
       {
@@ -348,6 +317,65 @@ void  *RecordSaveRunnable::Recive_fun(void* arg)
     return static_cast<RecordSaveRunnable*>(arg)->rtmpRecive_f();
 }
 
+//重连rtmp初始化
+int RecordSaveRunnable::BrokenlineReconnectionInit(RTMP *m_pRtmp)
+{
+     if(RTMP_IsConnected(m_pRtmp))
+     {
+         RTMP_Close(m_pRtmp);
+     }                 
+     if(NULL != m_pRtmp)
+     {
+         RTMP_Free(m_pRtmp);
+         m_pRtmp = NULL;
+     }
+	 
+     aacTagNum = 0;
+
+     firstflag = true;  
+
+     fclose(afile);
+     fclose(vfile);
+     fclose(wfile);
+
+     string data = "";
+     int ret = CreateFile(data);
+
+     if(0 != ret)
+     {
+        LOG(ERROR) << "新建文件失败  ret:"<<ret<<"  直播ID:"<<m_recordID;
+        return ret;
+     }  
+     return ret;
+}
+
+
+//重连rtmp,如小于三次,返回0;否则返回1
+int BrokenlineReconnection(int re_Connects)
+{
+	int ret = 0;
+	if(re_Connects < 3)
+	{
+	    LOG(ERROR) << "准备重连 直播ID:"<<m_recordID;    
+		
+        //重连初始化
+        ret = BrokenlineReconnectionInit(m_pRtmp);
+		return ret;
+	}
+	
+	LOG(ERROR) << "重连次数超过三次，停止录制任务 直播ID:"<<m_recordID;
+                      
+    save_httpflag = false;
+    runningp = 0;
+    recive_httpflag = 5 ; //连不上rtmp服务
+	
+	//上传录制状态
+    m_ret = UpdataRecordflag(recive_http,recive_httpflag);
+	
+	ret = 1;
+	return ret;
+}
+
 //读线程函数
 void *RecordSaveRunnable::rtmpRecive_f()
 {
@@ -364,14 +392,8 @@ void *RecordSaveRunnable::rtmpRecive_f()
     }
 	memset(buf, 0, bufsize);
 	
-	int re_Connects = 0;  //断开重连次数
-    int re_Read = 0; //读取sokcet数据超时次数
-	
-	struct timespec outtime;
-    struct timeval now;
-	gettimeofday(&now, NULL);
-    outtime.tv_sec = now.tv_sec;
-
+	int re_Connects = 0;  //重连次数
+  	
     double duration = 0.0;
     uint32_t bufferTime = (uint32_t) (duration * 1000.0) + 5000; 
 
@@ -421,17 +443,13 @@ begin:
 		 
        int nRead = RTMP_Read(m_pRtmp, buf, bufsize);  
        
-       if(nRead > 0)
+       if(nRead > 0) //能读到数据
        {          
           if(0 != re_Connects)
           {
               re_Connects = 0;
           }
-          if(0 != re_Read)
-          {
-              re_Read = 0;
-          }	  
-	      
+            
 		  char *m_buf = buf; 
 		  
           //第一次连RTMP时，除去FLV头
@@ -458,7 +476,7 @@ begin:
 		 }	 
      }else 
      {  
-        //rtmp读数据超时，一直读不到数据
+        //rtmp读数据超时
         if(RTMP_IsTimedout(m_pRtmp))
         {        
             //直播查询,看直播是否中断         
@@ -480,131 +498,57 @@ begin:
                           
                  if("1" == liveinfo)  //查询到还在直播中 rtmp准备重连
                  {
-                     re_Connects++;
-                     if(re_Connects > 3)
-                     {
-                        //断线重连次数超过三次，停止录制任务
-                        LOG(ERROR) << "断线重连次数超过三次，停止录制任务 直播ID:"<<m_recordID;
-                      
-                        save_httpflag = false;
-                        runningp = 0;
-                        recive_httpflag = 5 ; //连不上rtmp服务
-                        m_ret = UpdataRecordflag(recive_http,recive_httpflag);
-                        break;
-                     }                 
-					 LOG(ERROR) << "查询到还在直播中 准备重连 直播ID:"<<m_recordID;
-                                  
-                     //断线重连初始化
-                     m_ret = BrokenlineReconnectionInit(m_pRtmp);
-
-                     if(0 != m_ret)
-                     {
-                        LOG(ERROR) << "重连 新建文件失败   ret:"<<m_ret<<"   直播ID:"<<m_recordID;
-                        save_httpflag = false;
-                        runningp = 0;
-                        recive_httpflag = 8; //直播标志设置为8                                     
-                        m_ret = UpdataRecordflag(recive_http,recive_httpflag);
-                        break;
-                     }
-                     goto begin; //开始重连 
-               
-               }else //查询到直播停止或直播中断
-               {    
+                     re_Connects++;		 
+					 m_ret = BrokenlineReconnection(re_Connects);
+					 if(0 == m_ret)
+					 {					
+                        goto begin; //开始重连 			
+					 }else
+					 {
+                        break;	//重连超过三次,停止录制任务					 
+					 }    
+                }else //查询到直播停止或直播中断
+                {    
                     save_httpflag = false;    
                     runningp = 0;
-                    recive_httpflag = atoi(liveinfo.c_str()); //直播标志设置为客户端传回来的异常状态 3或4
-                             
-                    LOG(ERROR) <<"查询到直播停止或直播中断  直播ID:"<<m_recordID;
-                              
-                    //直播停止或直播中断,调用修改直播接口,禁止写线程调用
+                    recive_httpflag = atoi(liveinfo.c_str()); //直播标志设置为客户端传回来的异常状态 3或4 
                     m_ret = UpdataRecordflag(recive_http,recive_httpflag);
+					
+					LOG(ERROR) <<"查询到直播停止或直播中断  直播ID:"<<m_recordID;
                     break;
                }  	            
            }else  //调用直播查询接口失败
            {
-                   cout<<m_ret<<endl;
-                   LOG(ERROR) << "直播查询失败 "<<"错误代号:"<<m_ret;
+                   LOG(ERROR) << "直播查询失败 "<<"错误代号:"<<m_ret<<"  直播ID:"<<m_recordID;
                        
                    //rtmp重连
                    re_Connects++;
-              
-                   if(re_Connects > 3)
-                   {
-                      //断线重连次数超过三次，停止录制任务
-                      LOG(ERROR) << "断线重连次数超过三次，停止录制任务 直播ID:"<<m_recordID;
-                              	  
-				      //RTMP连接断开,调用修改直播接口,禁止写线程调用 
-                      save_httpflag = false; 
-                      runningp = 0; 
-                      recive_httpflag = 5; //直播标志设置为5
-					
-                      m_ret = UpdataRecordflag(recive_http,recive_httpflag); 
-                      break;
-                  }   
-                  LOG(ERROR) << "直播过程中RTMP连接准备重连 直播过程中 直播ID:"<<m_recordID;
-                     
-                  //断线重连初始化
-                  m_ret = BrokenlineReconnectionInit(m_pRtmp);
-
-                  if(0 != m_ret)
-                  {
-                     LOG(ERROR) << "重连 新建文件失败   ret:"<<m_ret<<"   直播ID:"<<m_recordID;
-                     runningp = 0;
-                     recive_httpflag = 8; //直播标志设置为8                          
-                     
-                     save_httpflag = false;
-                     m_ret = UpdataRecordflag(recive_http,recive_httpflag);
-                     break;
-                 }
-                 goto begin; //开始重连
+                   m_ret = BrokenlineReconnection(re_Connects);
+				   if(0 == m_ret)
+			       {					
+                       goto begin; //开始重连 		   
+				   }else
+				   {
+                       break;	//重连超过三次,停止录制任务					 
+				   }    
            }
-        }else   
-        {
+      }else   
+      {
            //rtmp连接断开
            if(!RTMP_IsConnected(m_pRtmp))
            {
                 LOG(ERROR) <<"直播过程中rtmp连接中断 进行重连 直播ID:"<<m_recordID;         
-                re_Connects++;				
-				if(re_Connects > 3)
-                {
-                    //断线重连次数超过三次，停止录制任务
-                    LOG(ERROR) << "断线重连次数超过三次，停止录制任务 直播ID:"<<m_recordID;
-                
-                    save_httpflag = false;
-                    runningp = 0;
-                    recive_httpflag = 5 ; //连不上rtmp服务
-                    m_ret = UpdataRecordflag(recive_http,recive_httpflag);
-                    break;
-               }
-         
-                //断线重连初始化
-                m_ret = BrokenlineReconnectionInit(m_pRtmp);
-                if(0 != m_ret)
-                {
-                     LOG(ERROR) << "重连 新建文件失败   ret:"<<m_ret<<"   直播ID:"<<m_recordID;
-                     runningp = 0;
-                     recive_httpflag = 8; //直播标志设置为8					 
-                     save_httpflag = false;
-                     m_ret = UpdataRecordflag(recive_http,recive_httpflag);
-                     break;
-                }
-                goto begin; //开始重连
-           }
-           re_Read++;
-           printf("读取sokcet次数：re_Read: %d\n", re_Read);
-              
-           //读取sokcet数据超时
-           if(re_Read > 3)
-           {
-              save_httpflag = false;
-              runningp = 0;
-              recive_httpflag = 7; //直播标志设置为7,                           
-              LOG(ERROR) << "直播过程中读取sokcet数据超时 直播ID:"<<m_recordID;
-
-              //能连上rtmp，但一直读不到数据,调用修改直播接口,禁止写线程调用  
-              m_ret = UpdataRecordflag(recive_http,recive_httpflag);
-              break;
-          }      
+                //rtmp重连
+                re_Connects++;
+                m_ret = BrokenlineReconnection(re_Connects);
+				if(0 == m_ret)
+			    {					
+                    goto begin; //开始重连 			
+				}else
+				{
+                    break;	//重连超过三次,停止录制任务						 
+				}  
+          }
        }
      } 
   }   
@@ -630,8 +574,8 @@ end:
    }
    if(NULL != buf)
    {
-	   free(buf);
-	   buf = NULL;
+	  free(buf);
+	  buf = NULL;
    }
    
    LOG(INFO) << "读线程结束  直播ID: "<<m_recordID;
@@ -641,7 +585,7 @@ end:
 //写线程静态函数
 void *RecordSaveRunnable::Save_fun(void *arg)
 {
-   return static_cast<RecordSaveRunnable*>(arg)->rtmpSave_f();
+     return static_cast<RecordSaveRunnable*>(arg)->rtmpSave_f();
 }
 
 //写线程函数
@@ -698,7 +642,7 @@ void *RecordSaveRunnable::rtmpSave_f()
 				  
 			  }else //读数据已经结束，写数据也结束
 			  {
-				  if(0 != ToRead)
+				  if(!ToRead)
 				  { 
 			         LOG(ERROR) << "写缓存结束 缓存中还有不足一个Tag头数据 共: "<< ToRead<<"字节  直播ID:"<<m_recordID;
 				  }
@@ -736,11 +680,10 @@ void *RecordSaveRunnable::rtmpSave_f()
          
 		}else //开始解析帧数据
 	    {   
-		
            ToRead = tagdataSize + tagSize; 	//去读取Tag数据 + TagSize数据4字节	
 	       m_ret = m_cycleBuffer->read(tagData_buf,ToRead);
 		   
-		   if(0 != m_ret) //未读取到帧数据
+		   if(0 != m_ret) //未读取到Tag数据
 		   {
 			   if(!m_endRecvFlag)
 			   { 
@@ -827,7 +770,6 @@ void *RecordSaveRunnable::rtmpSave_f()
 //上传白板数据
 int RecordSaveRunnable::UploadWhiteData(LibcurClient *httpclient, std::string data)
 {
-
       string urlStr = IpPort;
       
       urlStr.append(liveUpload);
@@ -835,14 +777,11 @@ int RecordSaveRunnable::UploadWhiteData(LibcurClient *httpclient, std::string da
       printf("uploadURL: %s\n", urlStr.c_str());
       
       //int m_ret = httpclient->HttpPostData(urlStr.c_str(), m_recordID ,data);
-
       if(0 != m_ret)
       {
          LOG(ERROR) << "调用上传白板数据接口失败  m_ret:"<<m_ret<<" 直播ID"<<m_recordID;      
       }
-
       return m_ret;
-
 }
 
 //更新录制状态
@@ -868,11 +807,9 @@ int RecordSaveRunnable::UpdataRecordflag(LibcurClient *http_client ,int flag)
         LOG(ERROR)<<"调用更新录制状态接口失败  直播ID"<<m_recordID;
 	    return m_ret;
     }
-
     std::string resData = http_client->GetResdata();
-  
     m_ret = ParseJsonInfo(resData,resCodeInfo ,liveinfo ,pullUrl, false);
-
+	
     return m_ret;
 }
 
