@@ -19,9 +19,9 @@ std::map<std::string, RecordSaveRunnable*> RecordSaveMap; //直播对象队列
 
 std::list<std::string> DeleteRecordList;    //定时删除录制任务的队列
  
-static pthread_mutex_t record_mutex = PTHREAD_MUTEX_INITIALIZER; 
+static pthread_mutex_t record_mutex = PTHREAD_MUTEX_INITIALIZER;  //直播对象队列互斥量
 
-static pthread_mutex_t delete_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t delete_mutex = PTHREAD_MUTEX_INITIALIZER;  //定时删除录制队列互斥量
 
 //信号量
 sem_t bin_sem;
@@ -44,11 +44,13 @@ void updateOnline_fun();
 void checkdisk_fun();
 void deleteRecord_fun();
 
+
 //http监听服务 线程
 void ev_handler(struct mg_connection *nc, int ev, void *ev_data) 
 {
    switch (ev) 
    {
+	   
     case MG_EV_ACCEPT: 
 	{
         char addr[32];
@@ -58,7 +60,7 @@ void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
         break;
     }
     case MG_EV_HTTP_REQUEST: 
-	{
+    {
 
       struct http_message *hm = (struct http_message *) ev_data;
       char addr[32];
@@ -66,9 +68,8 @@ void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
                           MG_SOCK_STRINGIFY_IP | MG_SOCK_STRINGIFY_PORT);
       
 	  //获取Url字符串长度
-	  int urlLen =(int)hm->uri.len;
-	  char url[urlLen];
-      sprintf(url, "%.*s",urlLen,hm->uri.p);
+	  char url[(int)hm->uri.len];
+      sprintf(url, "%.*s",(int)hm->uri.len,hm->uri.p);
 	  
       RESCODE ret = RESCODE::NO_ERROR;
 	  
@@ -77,11 +78,14 @@ void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
          LOG(INFO) << "开始解析url:"<<url;
 		 
          //处理参数
-         char parmStr[(int) hm->query_string.len];
-         sprintf(parmStr, "%.*s",(int) hm->query_string.len,hm->query_string.p);
+		 int parmlen = (int)hm->query_string.len; //获取参数字符长度
+         char parmStr[parmlen];
+         sprintf(parmStr, "%.*s",parmlen,hm->query_string.p);
+		 
+		 printf("url参数长度：%d  %s",parmlen ,parmStr);
 		     
-         char *liveId_buf = (char*)malloc(sizeof(char)*urlLen);
-         memset(liveId_buf, 0 ,sizeof(char)*urlLen);
+         char *liveId_buf = (char*)malloc(sizeof(char)*parmlen);
+         memset(liveId_buf, 0 ,sizeof(char)*parmlen);
          if(NULL == liveId_buf)
          {       
              LOG(ERROR) << "参数liveId malloc失败:"<<liveId_buf;
@@ -89,8 +93,8 @@ void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
              goto end;            
          }
 
-         char *type_buf = (char*)malloc(sizeof(char)*urlLen);
-         memset(type_buf, 0 ,sizeof(char)*urlLen);
+         char *type_buf = (char*)malloc(sizeof(char)*parmlen);
+         memset(type_buf, 0 ,sizeof(char)*parmlen);
          if(NULL == type_buf)
          {       
              LOG(ERROR) << "参数liveType malloc失败:"<<type_buf;
@@ -98,8 +102,8 @@ void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
              goto end;            
          }
 		 
-         mg_get_http_var(&hm->query_string, "liveId", liveId_buf, urlLen); //获取liveID	 
-	     mg_get_http_var(&hm->query_string, "type", type_buf, urlLen);  //获取录制命令
+         mg_get_http_var(&hm->query_string, "liveId", liveId_buf, parmlen); //获取liveID	 
+	     mg_get_http_var(&hm->query_string, "type", type_buf, parmlen);  //获取录制命令
 		 
          printf("获取参数 : %s %s\n",liveId_buf ,type_buf);
          LOG(INFO) << "获取参数 : "<<liveId_buf<<"  "<<type_buf;   
@@ -121,11 +125,11 @@ void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
 				LOG(ERROR)<<"参数错误，直播ID为空";
                 ret = RESCODE::LIVEID_ERROR;
 			}
-       }else
-       {
+         }else
+         {
             LOG(ERROR)<<"未知的录制命令  直播ID:"<<liveId_buf;
             ret = RESCODE::TYPE_ERROR;
-       } 	
+         } 	
      }else
      {
         ret = RESCODE::METHOD_ERROR;
@@ -405,7 +409,7 @@ void checkdisk_fun()
 {
     char path[1024] ;
  
-    //获取当前的工作目录，注意：长度必须大于工作目录的长度加一
+    //获取当前的工作目录
     char *p = getcwd(path , 1024);
     printf("buffer:%s  p:%s size:%zu\n" , path , p , strlen(path));
 
@@ -552,10 +556,6 @@ int startServer(void)
 	std::string resStr = "";
     m_httpclient = new LibcurClient;
     std::string url;
-
-    //char path[1024] ;
-    //获取当前的工作目录，注意：长度必须大于工作目录的长度加一
-    //char *p = getcwd(path , 1024);
 
     main_ret = CreateLogFileDir(LOGFOLDER.c_str());
     if(0 != main_ret)
