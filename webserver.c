@@ -40,6 +40,9 @@ LibcurClient *m_httpclient, *s_httpclient;
 int parseResdata(string &resdata,  int ret ,PARSE_TYPE m_Type);
 void setTimer(unsigned seconds ,TIMER_TYPE TimerFlag);
 void *stopRecord_fun(void *data);
+void updateOnline_fun();
+void checkdisk_fun();
+void deleteRecord_fun();
 
 //http监听服务 线程
 void ev_handler(struct mg_connection *nc, int ev, void *ev_data) 
@@ -359,12 +362,12 @@ void setTimer(unsigned seconds ,TIMER_TYPE TimerFlag)
 	    }
 		case TIMER_TYPE::DELETERECORD: //定时遍历及删除已停止的录制任务
 	    {
-			 updateOnline_fun();
+			 deleteRecord_fun();
 			 break;
 	    }
 		case TIMER_TYPE::CHEDISK:  //定时检测磁盘空间
 	    {
-			 updateOnline_fun();
+			 checkdisk_fun();
 			 break;
 	    }
 	 }
@@ -437,7 +440,8 @@ void updateOnline_fun()
 	int main_ret = s_httpclient->HttpGetData(updateOnlineUrl.c_str());
     if(0 == main_ret)
     {
-        main_ret = parseResdata(s_httpclient->GetResdata(), main_ret ,PARSE_TYPE::UPDATA);
+		std::string resData = s_httpclient->GetResdata();
+        main_ret = parseResdata(resData, main_ret ,PARSE_TYPE::UPDATA);
 		if(0 != main_ret)
 		{
 		  LOG(ERROR) << "解析定时返回数据失败  main_ret:"<<main_ret; 
@@ -458,6 +462,16 @@ void *deletRecord_fun(void *data)
    return data;
 }
 
+//定时检测磁盘 线程
+void *checkDisk_fun(void *data)
+{
+   while(record_flag)
+   {  
+      setTimer(60 * 30 , TIMER_TYPE::CHEDISK);
+   }
+   return data;
+}
+
 //定时上传录制在线 线程
 void *httpTime_fun(void *pdata)
 {
@@ -470,7 +484,7 @@ void *httpTime_fun(void *pdata)
    
    updateOnlineUrl.append(record_serverId);
    updateOnlineUrl.append("&netFlag=20");
-   cout<<"time url:"<<url<<endl;
+   cout<<"time url:"<<updateOnlineUrl<<endl;
 
    //录制服务在线状态定时上传
    while(record_flag)
@@ -484,17 +498,6 @@ void *httpTime_fun(void *pdata)
    }
    return pdata;
 }
-
-//定时检测磁盘 线程
-void *checkDisk_fun(void *data)
-{
-   while(record_flag)
-   {  
-      setTimer(60 * 30 , TIMER_TYPE::CHEDISK);
-   }
-   return data;
-}
-
 //http服务监听 线程
 void *httpServer_fun(void *pdata)
 {
@@ -617,7 +620,7 @@ int startServer(void)
 	  if(0 != main_ret)
 	  {
 		   LOG(ERROR) << "解析注册录制 数据失败 main_ret:"<<main_ret; 
-		   return main_ret;
+		   //return main_ret;
 	  }	  
    }else
    {  
