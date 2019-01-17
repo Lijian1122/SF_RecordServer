@@ -46,11 +46,11 @@ public:
 	std::string GetResdata();
 
 	char *UrlEncode(std::string &m_str);
-
+	
 public:
 
 	LibcurlFlag  m_lfFlag;
-
+	
 private:
 
     CURL* m_curl;
