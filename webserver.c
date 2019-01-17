@@ -64,15 +64,12 @@ void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
       char addr[32];
       mg_sock_addr_to_str(&nc->sa, addr, sizeof(addr),
                           MG_SOCK_STRINGIFY_IP | MG_SOCK_STRINGIFY_PORT);
-      //printf("%p: %.*s %.*s %.*s\r\n", nc, (int) hm->method.len, hm->method.p,
-      //       (int) hm->uri.len, hm->uri.p ,(int) hm->body.len, hm->body.p);
-
-      char url[(int)hm->uri.len];
-      sprintf(url, "%.*s",(int)hm->uri.len,hm->uri.p);
-   
-      char urls[11];
-      sprintf(urls, "%.*s",11,hm->uri.p);
-
+      
+	  //获取Url字符串长度
+	  int urlLen =(int)hm->uri.len;
+	  char url[urlLen];
+      sprintf(url, "%.*s",urlLen,hm->uri.p);
+	  
       RESCODE ret = RESCODE::NO_ERROR;
 	  
       if(strcmp(url, "/live/record") == 0)
@@ -83,8 +80,8 @@ void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
          char parmStr[(int) hm->query_string.len];
          sprintf(parmStr, "%.*s",(int) hm->query_string.len,hm->query_string.p);
 		     
-         char *liveId_buf = (char*)malloc(sizeof(char)*128);
-         memset(liveId_buf, 0 ,sizeof(char)*128);
+         char *liveId_buf = (char*)malloc(sizeof(char)*urlLen);
+         memset(liveId_buf, 0 ,sizeof(char)*urlLen);
          if(NULL == liveId_buf)
          {       
              LOG(ERROR) << "参数liveId malloc失败:"<<liveId_buf;
@@ -92,8 +89,8 @@ void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
              goto end;            
          }
 
-         char *type_buf = (char*)malloc(sizeof(char)*128);
-         memset(type_buf, 0 ,sizeof(char)*128);
+         char *type_buf = (char*)malloc(sizeof(char)*urlLen);
+         memset(type_buf, 0 ,sizeof(char)*urlLen);
          if(NULL == type_buf)
          {       
              LOG(ERROR) << "参数liveType malloc失败:"<<type_buf;
@@ -101,8 +98,8 @@ void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
              goto end;            
          }
 		 
-         mg_get_http_var(&hm->query_string, "liveId", liveId_buf, 128); //获取liveID	 
-	     mg_get_http_var(&hm->query_string, "type", type_buf, 128);  //获取录制命令
+         mg_get_http_var(&hm->query_string, "liveId", liveId_buf, urlLen); //获取liveID	 
+	     mg_get_http_var(&hm->query_string, "type", type_buf, urlLen);  //获取录制命令
 		 
          printf("获取参数 : %s %s\n",liveId_buf ,type_buf);
          LOG(INFO) << "获取参数 : "<<liveId_buf<<"  "<<type_buf;   
@@ -110,32 +107,25 @@ void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
          //目前录制命令只支持0 1
          if((strcmp(type_buf,"0") == 0) || (strcmp(type_buf,"1") == 0))
          {
-            if(strlen(liveId_buf) == 0)
+            if(strlen(liveId_buf) > 0)
             {
-               LOG(ERROR)<<"参数错误，直播ID为空";
-               ret = RESCODE::LIVEID_ERROR;
-               goto end;
-            }
-			
-            liveParmStruct *m_parmData = (liveParmStruct*)malloc(sizeof(liveParmStruct));
-            m_parmData->liveID = liveId_buf;
-			m_parmData->liveType = type_buf;     
+			   liveParmStruct *m_parmData = (liveParmStruct*)malloc(sizeof(liveParmStruct));
+               m_parmData->liveID = liveId_buf;
+			   m_parmData->liveType = type_buf;     
 
-            sem_wait(&bin_blank);  
-			
-            liveParmQueue.push(m_parmData);
-			
-            sem_post(&bin_sem);    
-
-        }else
-        {
+               sem_wait(&bin_blank);  			
+               liveParmQueue.push(m_parmData);			
+               sem_post(&bin_sem);                 
+            }else
+			{
+				LOG(ERROR)<<"参数错误，直播ID为空";
+                ret = RESCODE::LIVEID_ERROR;
+			}
+       }else
+       {
             LOG(ERROR)<<"未知的录制命令  直播ID:"<<liveId_buf;
             ret = RESCODE::TYPE_ERROR;
-            goto end;
-        } 
-
-        ret = RESCODE::NO_ERROR;
-		
+       } 	
      }else
      {
         ret = RESCODE::METHOD_ERROR;
