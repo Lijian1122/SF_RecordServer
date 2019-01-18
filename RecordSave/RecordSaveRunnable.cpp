@@ -618,6 +618,7 @@ void *RecordSaveRunnable::rtmpSave_f()
 	
 	int m_ret = 0;
     bool tagFlag = true;
+	int ToRead = 0;
 
     while(runningc)
     {	              	
