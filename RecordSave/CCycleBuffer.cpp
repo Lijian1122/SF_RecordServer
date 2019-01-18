@@ -171,6 +171,7 @@ int CCycleBuffer::getRetainLength()
    }else if(m_nReadPos < m_nWritePos) 
    { 
        return m_nWritePos - m_nReadPos;  
+	   
    }else 
    { 
       return m_nBufSize - m_nReadPos + m_nWritePos; 

@@ -615,17 +615,9 @@ void *RecordSaveRunnable::rtmpSave_f()
 	
     //Tag数据长度缓冲区
     int tagSize = 4;
-    char *tagSize_buf = (char*)malloc(tagSize);
-    if(NULL == tagSize_buf)
-    {
-       LOG(ERROR) << "tagSize_buf 申请内存失败 直播ID:"<<m_recordID;
-       return  (void*)0;
-    }
-	memset(tagSize_buf, 0 ,tagSize);
 	
 	int m_ret = 0;
     bool tagFlag = true;
-	int ToRead = tagSize;  //缓冲区要读取的数据
 
     while(runningc)
     {	              	
@@ -652,11 +644,17 @@ void *RecordSaveRunnable::rtmpSave_f()
 		   }
 		 
 		   //获取数据长度
-           char *s = (char*)&tagdataSize;
+		   int size = 0;
+		   memcpy(&size, tagHead_buf + 1, 3);
+           size = HTON24(size);
+           
+		   char *s = (char*)&tagdataSize;
            *(s) = *(tagHead_buf+3);
            *(s+1) = *(tagHead_buf+2);
            *(s+2) = *(tagHead_buf+1);
 		   ToRead = tagdataSize + tagSize; 
+		   
+		   printf("temp1:%d  , temp2:%d", size ,tagdataSize);
 			  
 	       //tagdataSize大于TAG_BUFF_SIZE时 重新申请为原来的两倍内存
 	       if(ToRead  >  TAG_BUFF_SIZE)
@@ -697,26 +695,16 @@ void *RecordSaveRunnable::rtmpSave_f()
                   LOG(INFO) << "写缓存结束，缓冲区数据为空, 直播ID:"<<m_recordID;				  
 				  break;
 			   }	    
-		   }
-		   
-           memcpy(tagSize_buf ,tagData_buf+tagdataSize,tagSize);	   
-	
-		   int m_tagSize = 0;
-		   char *s = (char*)&m_tagSize;
-	       *(s) = *(tagSize_buf+3);
-	       *(s+1) = *(tagSize_buf+2);
-	       *(s+2) = *(tagSize_buf+1);
-	       *(s+3) = *(tagSize_buf);
+		  }  			
+		  m_ret =  WriteFile(tagHead_buf, tagData_buf, tagdataSize);
 				
-		   m_ret =  WriteFile(tagHead_buf, tagData_buf, tagdataSize);
-				
-	       if(m_ret != 0)
-		   {
+	      if(m_ret != 0)
+		  {
 			  LOG(ERROR) << "写入tag长度失败共:  "<< tagdataSize<<"字节未写入 直播ID:"<<m_recordID;
-		   }
+		  }
 			  
-           //重置Tag头flag				
-	       tagFlag = true;	
+          //重置Tag头flag				
+	      tagFlag = true;	
 	   }
     }
 	
@@ -758,12 +746,6 @@ void *RecordSaveRunnable::rtmpSave_f()
 		free(tagData_buf);
 		tagData_buf = NULL;
 	}
-	if(NULL != tagSize_buf)
-	{
-		free(tagSize_buf);
-		tagSize_buf = NULL;
-	}
-	
     return  (void*)0;    
 }
 
@@ -841,8 +823,7 @@ int RecordSaveRunnable::WriteFile(char *tagHead_buf,  char *tagData_buf, int tag
        {
           LOG(ERROR) << "白板tag写入失败 直播ID: "<<m_recordID;
        }
-    }
-	 
+    } 
     return 0;     
 }
 
@@ -861,7 +842,6 @@ bool RecordSaveRunnable::WriteExtractDefine(char *timebuff, char *data, int tagd
      }
      int iArrayNum = 0;
      memcpy(&iArrayNum, data + 9, 4);
-
      iArrayNum = HTON32(iArrayNum);
      char* pTmp = data + 13;
      for(int i = 0; i < iArrayNum; i++)
@@ -929,7 +909,6 @@ int RecordSaveRunnable::WriteAac(char *timebuff ,char *data, int datasize)
 			ad.length2 = (size >> 3) & 0xff;
 			ad.length3 = size & 0x07;
 
-     
 			if (sizeof(AdtsData) != fwrite((char*)&ad, 1, sizeof(AdtsData), afile))
 			{      
 			 	return 1;
@@ -969,47 +948,50 @@ int RecordSaveRunnable::Write264data(char *timebuff, char *packetBody, int datas
      char flag[] = {0x00,0x00,0x00,0x01};
      char *p = packetBody;
     
-     int a = 0;
+     int len = 0;
 
      if(((packetBody[0] & 0x0f) == 7)&& ((packetBody[1] & 0x0f) == 0)) 
      {  
    	     p = p + 11;
+		 
+		 //获取sps数据长度
 	     char sps[2]= {};
 	     strncpy(sps,p,2);
-	     char *s = (char*)&a;
+	     char *s = (char*)&len;
 	     *(s+1) = *(p);
 	     *(s) = *(p+1);
        
          //写入sps数据
   	     p = p + 2;
+		 
 	     if(4 != fwrite(flag, sizeof(char), 4, vfile))
          {
-           return 1;
+             return 1;
          }
 
-        //写入时间戳
-        // if(timestampSize != fwrite(timebuff, sizeof(char), timestampSize ,vfile))
-        // {
-        //    return 2;
-        // }
+         //写入时间戳
+         // if(timestampSize != fwrite(timebuff, sizeof(char), timestampSize ,vfile))
+         // {
+         //    return 2;
+         // }
 
-        if(a != fwrite(p, sizeof(char), a, vfile))
-        {
-           return 3;
-        }
+         if(len != fwrite(p, sizeof(char), len, vfile))
+         {
+             return 3;
+         }
        
-	    p = p +  a + 1; 
-        int b = 0;
-	    s = (char*)&a;
-	    *(s+1) =*(p);
-	    *(s) = *(p+1);
+	     //获取pps数据长度
+	     p = p +  len + 1; 
+	     s = (char*)&len;
+	     *(s+1) =*(p);
+	     *(s) = *(p+1);
         
-        //写入pps数据
-	    p = p+2;
-	    if(4 != fwrite(flag, sizeof(char), 4, vfile))
-        {
-           return 4;
-        }
+         //写入pps数据
+	     p = p+2;
+	     if(4 != fwrite(flag, sizeof(char), 4, vfile))
+         {
+            return 4;
+         }
 
         //写入时间戳
         // if(timestampSize != fwrite(timebuff, sizeof(char), timestampSize ,vfile))
@@ -1017,39 +999,27 @@ int RecordSaveRunnable::Write264data(char *timebuff, char *packetBody, int datas
         //    return 5;
         // }
 
-        if(a != fwrite(p, sizeof(char), a, vfile))
+        if(len != fwrite(p, sizeof(char), len, vfile))
         {
-          return 6;
-        }
-			
+            return 6;
+        }	
      }else
      {
-	     p = p + 5;
-	 
-	     int a = 0;
-	     char *s = (char*)&a;
-	     *(s) = *(p+3);
-	     *(s+1) = *(p+2);
-	     *(s+2) = *(p+1);
-	     *(s+3) = *(p);
-        
-         p = p + 4;
-    
+	     p = p + 9; 
 	     if(4 != fwrite(flag, sizeof(char), 4, vfile))
          {
-          return  7;
+            return  7;
          }
+         //写入时间戳
+         // if(timestampSize != fwrite(timebuff, sizeof(char), timestampSize ,vfile))
+         // {
+         //    return 8;
+         // }
 
-        //写入时间戳
-        // if(timestampSize != fwrite(timebuff, sizeof(char), timestampSize ,vfile))
-        // {
-        //    return 8;
-        // }
-
-        if((datasize - 9) != fwrite(p, sizeof(char), datasize - 9, vfile))
-        {
-           return  9;
-        }
+         if((datasize - 9) != fwrite(p, sizeof(char), datasize - 9, vfile))
+         {
+             return  9;
+         }
     }
     return 0;
 }
