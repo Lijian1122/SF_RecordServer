@@ -6,6 +6,7 @@
 功能：生成一个环形缓冲区的类，作为音视频数据的缓冲
 
 2019.01.15 把条件变量和互斥锁封装进缓冲区类中，方便rtmp读写线程调用
+2019.01.18 优化环形缓冲区代码
 ****************************************************/
  
 #ifndef CCycleBuffer_H
@@ -26,24 +27,13 @@ class CCycleBuffer
       CCycleBuffer(int size = BUFFER_SIZE);
 	 
       ~CCycleBuffer();
-	 
-      /*缓冲区有效数据长度*/
-      int getRetainLength();
-	 
+	 	 
       /*往缓冲区写数据*/
       int write(char* buf,int count);
 	 
       /*从缓冲区读数据*/
       int read(char* buf,int count);
-	 
-  private:
-  
-     /*写数据时,m_nWritePos以后的剩余空间足够*/
-     int WriteLeftData(int m_nWritePos,char* buf,int count);
-
-     /*读数据时, m_nReadPos以后的数据足够*/
-     int ReadLeftData(int m_nReadPos,char* buf,int count);
-	
+	 	
  private:
  
     pthread_mutex_t mutex;    /*用于对缓冲区的互斥*/
@@ -55,8 +45,7 @@ class CCycleBuffer
     int m_nReadPos;  //读指针位置
     int m_nWritePos; //写指针位置
    
-    bool m_bEmpty;
-    bool m_bFull;
+    int m_usedSize;  //已用空间
 };
 
 #endif// CCycleBuffer_H

@@ -212,8 +212,6 @@ void *recordManage_fun(void *data)
 				 sem_wait(&record_blank); 	 
                  DeleteRecordSaveQueue.push(m_runnable);		 
                  sem_post(&record_sem); 
-
-                 				 
 			}else
 			{
 				 pthread_mutex_unlock(&record_mutex);
@@ -261,7 +259,7 @@ void *stopRecord_fun(void *data)
         }
 		
 		pthread_mutex_lock(&record_mutex);
-            std::string liveID = m_runnable->m_recordID;
+        std::string liveID = m_runnable->m_recordID;
 	    std::map<std::string, RecordSaveRunnable*>::iterator it = RecordSaveMap.find(m_runnable->m_recordID);			
         if(it != RecordSaveMap.end()) //在录制对象队列中找到liveID，删除录制对象
 	    {
@@ -366,10 +364,6 @@ void updateOnline_fun()
 void checkdisk_fun()
 {
     char path[1024] ;
- 
-    //获取当前的工作目录
-    char *p = getcwd(path , 1024);
-    printf("buffer:%s  p:%s size:%zu\n" , path , p , strlen(path));
 
     struct statfs diskInfo;
     statfs(path, &diskInfo);
@@ -450,6 +444,7 @@ void *httpTime_fun(void *pdata)
    }
    return pdata;
 }
+
 //http服务监听 线程
 void *httpServer_fun(void *pdata)
 {
@@ -656,7 +651,6 @@ int startServer(void)
        LOG(ERROR) << "定时检测磁盘线程创建失败"<<" "<<"main_ret:"<<main_ret; 
        return main_ret;   
     }
-	
     return  main_ret;
 }
 
@@ -666,30 +660,6 @@ int stopServer(void)
 
     int main_ret = 0;
 
-    //注册录制服务离线接口
-    /*main_ret = m_httpclient->HttpGetData("http://192.168.1.205:8080/live/server_create?serverType=4&serverName=serverqw&netFlag=0&serverIp=192.168.1.206:8000");
-    if(main_ret != 0)
-    {
-       LOG(ERROR) << "注册录制服务离线失败  错误代号:"<<main_ret;  
-       return main_ret;
-
-    }else
-    {
-      json m_object = json::parse(m_httpclient->GetResdata());
-      if(m_object.is_object())
-      {
-         string resCode = m_object.value("code", "oops");
-         main_ret = atoi(resCode.c_str() );
-
-         if(0 != main_ret)
-         {
-             std::cout<<main_ret<<endl;
-             LOG(ERROR) << "注册录制服务离线失败 main_ret:"<< main_ret <<"   错误信息:"<<m_object.at("msg");
-             return main_ret ;
-         }
-      }
-    } */
-  
     //定时上传录制状态线程退出
     //record_flag = 0; 
     main_ret = pthread_join(httpTime_t,NULL);

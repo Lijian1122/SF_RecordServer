@@ -254,7 +254,6 @@ int RecordSaveRunnable::CreateFile(std::string &resData)
        return ret;   
      }
   
-
      sprintf(aFileStr ,"%s%s%s",fileDir, m_recordID.c_str(), ".aac");
 
      sprintf(vFileStr ,"%s%s%s",fileDir, m_recordID.c_str(), ".h264");
@@ -395,9 +394,10 @@ void *RecordSaveRunnable::rtmpRecive_f()
 	int re_Connects = 0;  //重连次数
   	
     double duration = 0.0;
-    uint32_t bufferTime = (uint32_t) (duration * 1000.0) + 5000; 
+    uint32_t bufferTime = (uint32_t)(duration * 1000.0) + 5000; 
 
     m_pullUrl.append(m_recordID);
+	//m_pullUrl = "rtmp://www.bj-mobiletv.com:8000/live/FreeManCamera2018003";
 
     recive_httpflag = 1;
     int m_ret = UpdataRecordflag(recive_http,recive_httpflag);
@@ -625,7 +625,7 @@ void *RecordSaveRunnable::rtmpSave_f()
         if(tagFlag) //开始解析Tag头
         {	
            ToRead = tagHeadSize;		
-		   m_ret = m_cycleBuffer->read(tagHead_buf,ToRead);
+		   m_ret = m_cycleBuffer->read(tagHead_buf,tagHeadSize);
 		      
 		   if(0 != m_ret) //未读取到Tag头
 		   {
@@ -645,20 +645,11 @@ void *RecordSaveRunnable::rtmpSave_f()
 		   }
 		 
 		   //获取数据长度
-		   int size = 0;
-		   memcpy(&size, tagHead_buf + 1, 3);
-           size = HTON24(size);
-           
-		   char *s = (char*)&tagdataSize;
-           *(s) = *(tagHead_buf+3);
-           *(s+1) = *(tagHead_buf+2);
-           *(s+2) = *(tagHead_buf+1);
-		   ToRead = tagdataSize + tagSize; 
-		   
-		   printf("temp1:%d  , temp2:%d", size ,tagdataSize);
-			  
+		   memcpy(&tagdataSize, tagHead_buf + 1, 3);
+           tagdataSize = HTON24(tagdataSize);
+           		  
 	       //tagdataSize大于TAG_BUFF_SIZE时 重新申请为原来的两倍内存
-	       if(ToRead  >  TAG_BUFF_SIZE)
+	       if(tagdataSize + tagSize  >  TAG_BUFF_SIZE)
 	       {
 		        if(NULL != tagData_buf)
 		        {
@@ -679,8 +670,8 @@ void *RecordSaveRunnable::rtmpSave_f()
          
 		}else //开始解析帧数据
 	    {   
-           ToRead = tagdataSize + tagSize; 	//去读取Tag数据 + TagSize数据4字节	
-	       m_ret = m_cycleBuffer->read(tagData_buf,ToRead);
+          
+	       m_ret = m_cycleBuffer->read(tagData_buf,tagdataSize + tagSize);  //去读取Tag数据	+ 4字节TagSize
 		   
 		   if(0 != m_ret) //未读取到Tag数据
 		   {
@@ -703,7 +694,7 @@ void *RecordSaveRunnable::rtmpSave_f()
 		  {
 			  LOG(ERROR) << "写入tag长度失败共:  "<< tagdataSize<<"字节未写入 直播ID:"<<m_recordID;
 		  }
-			  
+	  	  		 		  
           //重置Tag头flag				
 	      tagFlag = true;	
 	   }
@@ -800,7 +791,7 @@ int RecordSaveRunnable::UpdataRecordflag(LibcurClient *http_client ,int flag)
 int RecordSaveRunnable::WriteFile(char *tagHead_buf,  char *tagData_buf, int tagdataSize)
 {          
          
-    //时间戳
+    //时间戳指针
     char *timestamp_buf = tagHead_buf + 4;
 	
     if(tagHead_buf[0] == 0x09) // 视频 
@@ -888,7 +879,7 @@ bool RecordSaveRunnable::WriteExtractDefine(char *timebuff, char *data, int tagd
 //aac数据写入aac文件
 int RecordSaveRunnable::WriteAac(char *timebuff ,char *data, int datasize)
 {       
-	if (data[1] == 0x00)
+	if(data[1] == 0x00)
 	{
 		iHasAudioSpecificConfig = 1;
 		memcpy(&ah, data+2, sizeof(AdtsHeader));
@@ -916,12 +907,12 @@ int RecordSaveRunnable::WriteAac(char *timebuff ,char *data, int datasize)
 		    }
 		}
      
-       //写入时间戳
-       // if(timestampSize != fwrite(timebuff, 1, timestampSize, afile))
-       // {
-       //  return 2;
-       // }
-
+        //写入时间戳
+        // if(timestampSize != fwrite(timebuff, 1, timestampSize, afile))
+        // {
+        //  return 2;
+        // }
+ 
       if(datasize - 2 != fwrite(data + 2, 1, datasize - 2, afile))
 	  {    
 	  	 return 3;
@@ -956,15 +947,15 @@ int RecordSaveRunnable::Write264data(char *timebuff, char *packetBody, int datas
    	     p = p + 11;
 		 
 		 //获取sps数据长度
-	     char sps[2]= {};
+	     char sps[2]= {0};
 	     strncpy(sps,p,2);
+		 
 	     char *s = (char*)&len;
 	     *(s+1) = *(p);
 	     *(s) = *(p+1);
        
          //写入sps数据
-  	     p = p + 2;
-		 
+  	     p = p + 2; 
 	     if(4 != fwrite(flag, sizeof(char), 4, vfile))
          {
              return 1;
