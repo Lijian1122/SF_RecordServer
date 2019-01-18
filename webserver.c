@@ -261,6 +261,7 @@ void *stopRecord_fun(void *data)
         }
 		
 		pthread_mutex_lock(&record_mutex);
+            std::string liveID = m_runnable->m_recordID;
 	    std::map<std::string, RecordSaveRunnable*>::iterator it = RecordSaveMap.find(m_runnable->m_recordID);			
         if(it != RecordSaveMap.end()) //在录制对象队列中找到liveID，删除录制对象
 	    {
@@ -272,7 +273,7 @@ void *stopRecord_fun(void *data)
 			  delete m_runnable;
 			  m_runnable = NULL;
 		  }
-		  LOG(INFO)<<"删除录制任务成功  直播ID:"<< liveID;
+		  LOG(INFO)<<"删除录制任务成功  直播ID:"<< liveID ;
 		  RecordSaveMap.erase(it);
 	   }	        
 	   pthread_mutex_unlock(&record_mutex);

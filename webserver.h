@@ -92,7 +92,6 @@ enum RESCODE{
 //定时器任务类型
 enum TIMER_TYPE{ 
    UPDATEONLINE = 0,
-   DELETERECORD,
    CHEDISK
 };
 
