@@ -1,6 +1,5 @@
 #include <queue>
 #include <map>
-#include <list>
 
 #include "mongoose.h"
 #include "glog/logging.h"
@@ -17,15 +16,17 @@ std::queue<liveParmStruct*> liveParmQueue; //直播参数队列
 
 std::map<std::string, RecordSaveRunnable*> RecordSaveMap; //直播对象队列
 
-std::list<std::string> DeleteRecordList;    //定时删除录制任务的队列
+std::queue<RecordSaveRunnable*> DeleteRecordSaveQueue;    //删除录制任务的队列
  
 static pthread_mutex_t record_mutex = PTHREAD_MUTEX_INITIALIZER;  //直播对象队列互斥量
 
-static pthread_mutex_t delete_mutex = PTHREAD_MUTEX_INITIALIZER;  //定时删除录制队列互斥量
-
-//信号量
+//Http参数信号量
 sem_t bin_sem;
 sem_t bin_blank;
+
+//停止录制任务信号量
+sem_t record_sem;
+sem_t record_blank;
 
 //线程对象
 pthread_t recordManage_t;
@@ -38,14 +39,9 @@ pthread_t deletRecordTask_t;
 LibcurClient *m_httpclient, *s_httpclient;
 
 int parseResdata(string &resdata,  int ret ,PARSE_TYPE m_Type);
-void setTimer(unsigned seconds ,TIMER_TYPE TimerFlag);
-void *stopRecord_fun(void *data);
-void updateOnline_fun();
-void checkdisk_fun();
-void deleteRecord_fun();
 
 
-//http监听服务 线程
+//处理Http请求
 void ev_handler(struct mg_connection *nc, int ev, void *ev_data) 
 {
    switch (ev) 
@@ -156,7 +152,7 @@ end:
   }
 }
 
-//录制任务管理 线程
+//处理录制参数 线程
 void *recordManage_fun(void *data)
 {
     int ret = 0;
@@ -181,28 +177,26 @@ void *recordManage_fun(void *data)
 				  
 				  if(ret == 0)//启动成功
                   {		  					  
-					  RecordSaveMap.insert(std::pair<std::string, RecordSaveRunnable*>(pdata->liveID,recordRun));
-        
+					  RecordSaveMap.insert(std::pair<std::string, RecordSaveRunnable*>(pdata->liveID,recordRun));       
                       pthread_mutex_unlock(&record_mutex);
 
                       LOG(INFO) << "启动录制任务成功   ret:"<<ret<<"   直播ID:"<<pdata->liveID;
-                 }else
-                 { 
-                    pthread_mutex_unlock(&record_mutex);
+                  }else
+                  { 
+                     pthread_mutex_unlock(&record_mutex);
     	            
-                    if(NULL != recordRun)
-                    {
+					 LOG(ERROR) << "启动录制任务失败  ret:"<<ret<<"   直播ID:"<<pdata->liveID;
+                     if(NULL != recordRun)
+                     {
 	                    delete recordRun;
                         recordRun = NULL;
-                    }
-                    LOG(ERROR) << "启动录制任务失败  ret:"<<ret<<"   直播ID:"<<pdata->liveID;					
+                     }            					
 				 }					
-             }else
-             {
+            }else
+            {
 				   pthread_mutex_unlock(&record_mutex);
                    LOG(ERROR) << "该录制任务正在录制中  直播ID:"<<pdata->liveID;         
-             }    
-			 
+            }    	 
        }else if(strcmp(pdata->liveType,"1") == 0)  //结束录制
        {
 			pthread_mutex_lock(&record_mutex);
@@ -212,17 +206,14 @@ void *recordManage_fun(void *data)
             if(iter != RecordSaveMap.end()) //在录制对象队列中找到找到liveID,停止录制
 		    {
 				 RecordSaveRunnable *m_runnable = (iter)->second;
-				 
-                 pthread_t deleteRunnable_t;
-                 ret = pthread_create(&deleteRunnable_t, NULL,stopRecord_fun, (void*)m_runnable);
-				 pthread_mutex_unlock(&record_mutex); 
-                 if(0 == ret)
-                 {
-					LOG(INFO) << "创建停止录制任务线程成功  ret:"<<ret<<"   直播ID:"<<pdata->liveID; 
-                 }else
-			     {
-					LOG(ERROR) << "创建停止录制任务线程失败  ret:"<<ret<<"   直播ID:"<<pdata->liveID;
-				 }		  		 
+				 pthread_mutex_unlock(&record_mutex);
+				 	
+                 //发送停止删除 信号					
+				 sem_wait(&record_blank); 	 
+                 DeleteRecordSaveQueue.push(m_runnable);		 
+                 sem_post(&record_sem); 
+
+                 				 
 			}else
 			{
 				 pthread_mutex_unlock(&record_mutex);
@@ -251,29 +242,48 @@ void *recordManage_fun(void *data)
 
 //停止录制任务 线程
 void *stopRecord_fun(void *data)
-{
-     RecordSaveRunnable *m_runnable  = (RecordSaveRunnable*)data;
-
-	 int ret = m_runnable->StopRecord();
-	 	 
-	 if(0 == ret)
-     {
-         LOG(INFO)<< "停止录制任务成功 ret:"<<ret<<"   直播ID:"<<m_runnable->m_recordID;                
-     }else
-     {
-         LOG(ERROR) << "停止录制任务失败 ret:"<<ret<<"   直播ID:"<<m_runnable->m_recordID;
-     }
-	 
-	 pthread_mutex_lock(&delete_mutex); 
-     DeleteRecordList.push_back(m_runnable->m_recordID);	  
-	 pthread_mutex_unlock(&delete_mutex);
-	    
-     pthread_detach(pthread_self()); 
-
-     return data;
+{	
+	int ret = 0;
+    while(recordMange_flag)
+    {      
+        sem_wait(&record_sem); 	
+		
+        RecordSaveRunnable *m_runnable = DeleteRecordSaveQueue.front();
+		
+		//停止录制任务
+	    ret = m_runnable->StopRecord(); 	 
+	    if(0 == ret)
+        {
+             LOG(INFO)<< "停止录制任务成功 ret:"<<ret<<"   直播ID:"<<m_runnable->m_recordID;                
+        }else
+        {
+             LOG(ERROR) << "停止录制任务失败 ret:"<<ret<<"   直播ID:"<<m_runnable->m_recordID;
+        }
+		
+		pthread_mutex_lock(&record_mutex);
+	    std::map<std::string, RecordSaveRunnable*>::iterator it = RecordSaveMap.find(m_runnable->m_recordID);			
+        if(it != RecordSaveMap.end()) //在录制对象队列中找到liveID，删除录制对象
+	    {
+		  RecordSaveRunnable *m_runnable = (it)->second;
+		  
+		  //删除队列中的录制任务
+		  if(NULL != m_runnable)
+		  {
+			  delete m_runnable;
+			  m_runnable = NULL;
+		  }
+		  LOG(INFO)<<"删除录制任务成功  直播ID:"<< liveID;
+		  RecordSaveMap.erase(it);
+	   }	        
+	   pthread_mutex_unlock(&record_mutex);
+	   
+	   DeleteRecordSaveQueue.pop();    
+       sem_post(&record_blank); 
+	}
+	return data;
 }
 
-//解析http返回json数据
+//解析Http返回json数据
 int parseResdata(string &resdata,  int ret ,PARSE_TYPE m_Type)
 {     
     if(!resdata.empty())
@@ -334,76 +344,23 @@ int parseResdata(string &resdata,  int ret ,PARSE_TYPE m_Type)
    return ret;
 }
 
-//设置定时器任务
-void setTimer(unsigned seconds ,TIMER_TYPE TimerFlag)
+//上传录制在线
+void updateOnline_fun()
 {
-    struct timeval tv;
-    time_t tt;
-    tv.tv_sec=seconds;
-    tv.tv_usec=0;
-    int err;
- do{
-     err=select(0,NULL,NULL,NULL,&tv);
-     time(&tt);
-	 
-	 switch (TimerFlag) 
-     {
-        case TIMER_TYPE::UPDATEONLINE:  //定时上传录制在线
-	    {
-			 updateOnline_fun();
-			 break;
-	    }
-		case TIMER_TYPE::DELETERECORD: //定时遍历及删除已停止的录制任务
-	    {
-			 deleteRecord_fun();
-			 break;
-	    }
-		case TIMER_TYPE::CHEDISK:  //定时检测磁盘空间
-	    {
-			 checkdisk_fun();
-			 break;
-	    }
-	 }
-  }while(err<0 && errno==EINTR);
+	int main_ret = s_httpclient->HttpGetData(updateOnlineUrl.c_str());
+    if(0 == main_ret)
+    {
+		std::string resData = s_httpclient->GetResdata();
+        main_ret = parseResdata(resData, main_ret ,PARSE_TYPE::UPDATA);
+		if(0 != main_ret)
+		{
+		  LOG(ERROR) << "解析定时返回数据失败  main_ret:"<<main_ret; 
+		}
+    }else
+    {
+       //LOG(ERROR) << "调用定时上在线状态接口失败  main_ret:"<<main_ret;  
+    }	
 }
-
-//遍历及删除已停止的录制任务
-void deleteRecord_fun()
-{
-	pthread_mutex_lock(&delete_mutex);
-	printf("delete record...\n");
-	std::list<std::string>::iterator iter;
-	for(iter= DeleteRecordList.begin(); iter != DeleteRecordList.end();)
-	{
-	   std::string liveID = *iter;    
-	   pthread_mutex_lock(&record_mutex);
-	   std::map<std::string, RecordSaveRunnable*>::iterator it = RecordSaveMap.find(liveID);
-			
-       if(it != RecordSaveMap.end()) //在录制对象队列中找到liveID，删除录制对象
-	   {
-		  RecordSaveRunnable *m_runnable = (it)->second;
-		  
-		  //删除队列中的录制任务
-		  if(NULL != m_runnable)
-		  {
-			  delete m_runnable;
-			  m_runnable = NULL;
-		  }
-		  LOG(INFO)<<"删除录制任务成功  直播ID:"<< liveID;
-		  RecordSaveMap.erase(it);
-	   }
-	        
-	   pthread_mutex_unlock(&record_mutex);
-	      
-	   iter =  DeleteRecordList.erase(iter);     
-	}
-	
-	if(!DeleteRecordList.empty())
-	      DeleteRecordList.clear();
-	  
-    pthread_mutex_unlock(&delete_mutex); 
-}
-
 //检测磁盘空间
 void checkdisk_fun()
 {
@@ -428,32 +385,32 @@ void checkdisk_fun()
     }
 }
 
-//上传录制在线
-void updateOnline_fun()
+//设置定时器任务
+void setTimer(unsigned seconds ,TIMER_TYPE TimerFlag)
 {
-	int main_ret = s_httpclient->HttpGetData(updateOnlineUrl.c_str());
-    if(0 == main_ret)
-    {
-		std::string resData = s_httpclient->GetResdata();
-        main_ret = parseResdata(resData, main_ret ,PARSE_TYPE::UPDATA);
-		if(0 != main_ret)
-		{
-		  LOG(ERROR) << "解析定时返回数据失败  main_ret:"<<main_ret; 
-		}
-    }else
-    {
-       //LOG(ERROR) << "调用定时上在线状态接口失败  main_ret:"<<main_ret;  
-    }	
-}
-
-//定时删除已停止的录制任务 线程
-void *deletRecord_fun(void *data)
-{
-   while(record_flag)
-   {  
-      setTimer(30, TIMER_TYPE::DELETERECORD);
-   }
-   return data;
+    struct timeval tv;
+    time_t tt;
+    tv.tv_sec=seconds;
+    tv.tv_usec=0;
+    int err;
+ do{
+     err=select(0,NULL,NULL,NULL,&tv);
+     time(&tt);
+	 
+	 switch (TimerFlag) 
+     {
+        case TIMER_TYPE::UPDATEONLINE:  //定时上传录制在线
+	    {
+			 updateOnline_fun();
+			 break;
+	    }
+		case TIMER_TYPE::CHEDISK:  //定时检测磁盘空间
+	    {
+			 checkdisk_fun();
+			 break;
+	    }
+	 }
+  }while(err<0 && errno==EINTR);
 }
 
 //定时检测磁盘 线程
@@ -562,7 +519,7 @@ int startServer(void)
     {
        LOG(ERROR) << "创建log 文件夹失败"<<"   main_ret:"<<main_ret;
        return main_ret ;
-     }
+    }
 
 	//创建log初始化
     google::InitGoogleLogging("");
@@ -629,7 +586,7 @@ int startServer(void)
     // std::string sendmsg = obj.dump();
     // sendMsg(msqid, CLIENT_TYPE, sendmsg.c_str());
 
-    //信号量初始化
+    //Http参数信号量初始化
     main_ret = sem_init(&bin_sem, 0, 0);
     if(0 != main_ret)
     {  
@@ -641,6 +598,21 @@ int startServer(void)
     if(0 != main_ret)
     {  
        LOG(ERROR) << "bin_blank创建失败"<<" "<<"main_ret:"<<main_ret;
+       return main_ret ;
+    }
+		
+	//停止录制任务信号量初始化
+    main_ret = sem_init(&record_sem, 0, 0);
+    if(0 != main_ret)
+    {  
+      LOG(ERROR) << "record_blank创建失败"<<" "<<"main_ret:"<<main_ret;
+      return main_ret ;
+    }
+ 
+    main_ret = sem_init(&record_blank, 0, 1000);
+    if(0 != main_ret)
+    {  
+       LOG(ERROR) << "record_blank创建失败"<<" "<<"main_ret:"<<main_ret;
        return main_ret ;
     }
      
@@ -676,8 +648,8 @@ int startServer(void)
        return main_ret;   
     }
 	
-    //创建定时删除录制任务线程
-	main_ret = pthread_create(&deletRecordTask_t,NULL, deletRecord_fun, NULL);
+    //创建删除录制任务线程
+	main_ret = pthread_create(&deletRecordTask_t,NULL, stopRecord_fun, NULL);
 	if(0 != main_ret)
     { 
        LOG(ERROR) << "定时检测磁盘线程创建失败"<<" "<<"main_ret:"<<main_ret; 
@@ -694,10 +666,9 @@ int stopServer(void)
     int main_ret = 0;
 
     //注册录制服务离线接口
-   /*  main_ret = m_httpclient->HttpGetData("http://192.168.1.205:8080/live/server_create?serverType=4&serverName=serverqw&netFlag=0&serverIp=192.168.1.206:8000");
+    /*main_ret = m_httpclient->HttpGetData("http://192.168.1.205:8080/live/server_create?serverType=4&serverName=serverqw&netFlag=0&serverIp=192.168.1.206:8000");
     if(main_ret != 0)
     {
-
        LOG(ERROR) << "注册录制服务离线失败  错误代号:"<<main_ret;  
        return main_ret;
 
