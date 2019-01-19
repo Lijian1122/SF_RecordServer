@@ -42,7 +42,7 @@ RecordSaveRunnable::RecordSaveRunnable(char *pdata)
 
 
 //解析http返回json
-int RecordSaveRunnable::ParseJsonInfo(std::string &jsonStr ,std::string &resCodeInfo ,std::string &liveinfo ,std::string &pullUrl,bool urlflag)
+int RecordSaveRunnable::ParseJsonInfo(std::string &jsonStr ,std::string &resCodeInfo ,std::string &liveinfo ,std::string &pullUrl,URL_TYPE urlflag)
 {
     int main_ret = 0;
 
@@ -59,50 +59,44 @@ int RecordSaveRunnable::ParseJsonInfo(std::string &jsonStr ,std::string &resCode
            {
 			  resCodeInfo = m_object.value("msg", "oops");	
 			  
-			  if(!urlflag)
-			  {
-				 liveinfo = m_object.value("liveFlag", "oops");
-                 return main_ret;
-				 
-			  }else
-			  {
-                 auto it_liveinfo = m_object.find("live_info");
-                 if(it_liveinfo != m_object.end())
-                 {
-                    json liveinfoObj = m_object.at("live_info");
-                    if(liveinfoObj.is_object())
-                    {
-                      liveinfo = liveinfoObj.value("liveFlag", "oops");
-					  pullUrl = liveinfoObj.value("pullUrl", "oops");		
-				      LOG(INFO)<<"返回http 直播信息查询  liveFlag:"<<liveinfo <<"  pullUrl:"<<pullUrl<<"  直播ID:"<<m_recordID;
-	
-                      return main_ret;         
-                   }
-                }
-				LOG(ERROR)<<"http 直播信息解析失败  liveFlag:"<<main_ret <<"  resCodeInfo:"<<resCodeInfo <<"  直播ID:"<<m_recordID;
-				main_ret = 3;
-				return main_ret;	   
-		     }          
+			  switch(urlflag) 
+              {
+		         case URL_TYPE::UPDATA_RECORDFLAG:  //更新录制状态
+	             {
+					 break;
+				 }
+				 case URL_TYPE::SELECT_LIVEURL:  //查询直播信息及拉流URL
+	             {
+					 json liveinfoObj = m_object.at("live_info");
+					 liveinfo = liveinfoObj.value("liveFlag", "oops");
+					 pullUrl = liveinfoObj.value("pullUrl", "oops");		
+				     LOG(INFO)<<"返回http 直播信息查询  liveFlag:"<<liveinfo <<"  pullUrl:"<<pullUrl<<"  直播ID:"<<m_recordID;
+					 break;
+				 }
+				 case URL_TYPE::SELECT_LIVFLAG:  //查询直播状态
+	             {
+					liveinfo = m_object.value("liveFlag", "oops");
+                    return main_ret;
+					break;
+				 }
+			 }
           }else
           {  
               std::cout<<main_ret<<endl;
               resCodeInfo = m_object.value("msg", "oops");
-
-              LOG(ERROR)<<" Http接口返回异常  ret:"<<main_ret<<"  resCodeInfo:"<<resCodeInfo<<"  直播ID:"<<m_recordID;
-              return main_ret;	          
-         }
+              LOG(ERROR)<<" Http接口返回异常  ret:"<<main_ret<<"  resCodeInfo:"<<resCodeInfo<<"  直播ID:"<<m_recordID;            
+          }
        }else
        {
           LOG(ERROR)<<" Http接口返回数据不全 直播ID:"<<m_recordID;
-          main_ret = 1;
-          return main_ret;
+          main_ret = 1;        
        }
     }else
     {
         LOG(ERROR) << "Http接口返回数据为空  直播ID:"<<m_recordID;
         int main_ret = 2;
-        return main_ret;
     }
+	return main_ret;
 }
 
 //启动录制任务
@@ -121,7 +115,7 @@ int RecordSaveRunnable::StartRecord()
       if(0 == m_ret)
       {
 		 resData = recive_http->GetResdata();
-         if(0 != ParseJsonInfo(resData ,resCodeInfo ,liveinfo ,m_pullUrl ,true))
+         if(0 != ParseJsonInfo(resData ,resCodeInfo ,liveinfo ,m_pullUrl ,URL_TYPE::SELECT_LIVEURL))
          {
             LOG(ERROR) << "获取直播信息失败   ret:"<<m_ret<<" 直播ID:"<<m_recordID;
             m_ret = 1;
@@ -307,7 +301,6 @@ int RecordSaveRunnable::CreateFile(std::string &resData)
    
     LOG(INFO) << "打开所有文件成功  直播ID:"<<m_recordID;
     return ret;
-
 }
 
 //读线程静态函数
@@ -493,7 +486,7 @@ begin:
                  //获取解析查询返回值
                  std::string resData = recive_http->GetResdata();
 				 std::string url;
-                 m_ret = ParseJsonInfo(resData,resCodeInfo,liveinfo,url,false);
+                 m_ret = ParseJsonInfo(resData,resCodeInfo,liveinfo,url,URL_TYPE::SELECT_LIVFLAG);
                  LOG(INFO) <<"查询直播   直播状态:"<<liveinfo<< "  ret:"<<m_ret<<"  直播ID:"<<m_recordID;
                           
                  if("1" == liveinfo)  //查询到还在直播中 rtmp准备重连
@@ -625,7 +618,7 @@ void *RecordSaveRunnable::rtmpSave_f()
         if(tagFlag) //开始解析Tag头
         {	
            ToRead = tagHeadSize;		
-		   m_ret = m_cycleBuffer->read(tagHead_buf,tagHeadSize);
+		   m_ret = m_cycleBuffer->read(tagHead_buf,ToRead);
 		      
 		   if(0 != m_ret) //未读取到Tag头
 		   {
@@ -671,13 +664,15 @@ void *RecordSaveRunnable::rtmpSave_f()
 		}else //开始解析帧数据
 	    {   
           
-	       m_ret = m_cycleBuffer->read(tagData_buf,tagdataSize + tagSize);  //去读取Tag数据	+ 4字节TagSize
+		   ToRead = tagdataSize + tagSize;
+	       m_ret = m_cycleBuffer->read(tagData_buf,ToRead);  //去读取Tag数据	+ 4字节TagSize
 		   
 		   if(0 != m_ret) //未读取到Tag数据
 		   {
 			   if(!m_endRecvFlag)
 			   { 
-		          continue;		  
+		          continue;	
+				  
 			   }else //读数据已经结束，写数据也结束
 			   {
 				  if(!ToRead)
@@ -702,31 +697,8 @@ void *RecordSaveRunnable::rtmpSave_f()
 	
 	LOG(INFO) << "写线程结束 直播ID:"<<m_recordID;
 	
-	if(save_httpflag) //录制为正常结束，上传录制完成状态
-    {
-        recive_httpflag = 2;
-        m_ret = UpdataRecordflag(save_http,recive_httpflag);
-		if(0 != m_ret)
-        {
-         LOG(ERROR) << "调用上传录制完成状态接口失败   m_ret:"<<m_ret<<" 直播ID"<<m_recordID;      
-        }
-    }else
-    {
-		//录制异常结束,删除队列中录制任务
-        std::string resStr = "";
-        std::string getParm = "http://localhost:";
-        getParm.append(s_http_port);
-        getParm.append("/live/record?liveId=");
-        getParm.append(m_recordID);
-        getParm.append("&type=1");
-
-        printf("delete url: %s\n", getParm.c_str());
-        m_ret = save_http->HttpGetData(getParm.c_str()); 
-		if(0 != m_ret)
-        {
-           LOG(ERROR) << "调用删除录制任务接口失败   m_ret:"<<m_ret<<" 直播ID"<<m_recordID;      
-        }
-	}		
+	//上传录制完成状态
+	UploadRecordStopFlag();
 	
     if(NULL != tagHead_buf)
 	{
@@ -739,6 +711,35 @@ void *RecordSaveRunnable::rtmpSave_f()
 		tagData_buf = NULL;
 	}
     return  (void*)0;    
+}
+
+//写线程结束上传录制完成状态
+void RecordSaveRunnable::UploadRecordStopFlag()
+{
+	if(save_httpflag) //录制为正常结束，上传录制完成状态
+    {
+        recive_httpflag = 2;
+        m_ret = UpdataRecordflag(save_http,recive_httpflag);
+		if(0 != m_ret)
+        {
+         LOG(ERROR) << "调用上传录制完成状态接口失败   m_ret:"<<m_ret<<" 直播ID"<<m_recordID;      
+        }
+    }else  //录制异常结束,自动删除队列中录制任务
+    {
+		
+        std::string UrlStr = "http://localhost:";
+        UrlStr.append(s_http_port);
+        UrlStr.append("/live/record?liveId=");
+        UrlStr.append(m_recordID);
+        UrlStr.append("&type=1");
+
+        printf("delete url: %s\n", UrlStr.c_str());
+        m_ret = save_http->HttpGetData(UrlStr.c_str()); 
+		if(0 != m_ret)
+        {
+           LOG(ERROR) << "调用删除录制任务接口失败   m_ret:"<<m_ret<<" 直播ID"<<m_recordID;      
+        }
+	}		
 }
 
 //上传白板数据
@@ -761,7 +762,7 @@ int RecordSaveRunnable::UploadWhiteData(LibcurClient *httpclient, std::string da
 //更新录制状态
 int RecordSaveRunnable::UpdataRecordflag(LibcurClient *http_client ,int flag)
 {   
-    std::string  resCodeInfo ,liveinfo ,pullUrl;      
+    std::string  resCodeInfo ,liveinfo ,pullUrl, url;      
     std::string urlparm = liveUpdate;
     urlparm = urlparm.append("?liveId=");
    
@@ -775,15 +776,16 @@ int RecordSaveRunnable::UpdataRecordflag(LibcurClient *http_client ,int flag)
     std::string updataUrl = IpPort + urlparm;
  
     int m_ret = http_client->HttpGetData(updataUrl.c_str());
-
+	
     if(0 != m_ret)
     {
         LOG(ERROR)<<"调用更新录制状态接口失败  直播ID"<<m_recordID;
 	    return m_ret;
     }
     std::string resData = http_client->GetResdata();
-    m_ret = ParseJsonInfo(resData,resCodeInfo ,liveinfo ,pullUrl, false);
 	
+	m_ret = ParseJsonInfo(resData,resCodeInfo,liveinfo,url,URL_TYPE::UPDATA_RECORDFLAG);
+
     return m_ret;
 }
 

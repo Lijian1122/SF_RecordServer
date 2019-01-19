@@ -185,7 +185,7 @@ void *recordManage_fun(void *data)
                   { 
                      pthread_mutex_unlock(&record_mutex);
     	            
-					 LOG(ERROR) << "启动录制任务失败  ret:"<<ret<<"   直播ID:"<<pdata->liveID;
+	             LOG(ERROR) << "启动录制任务失败  ret:"<<ret<<"   直播ID:"<<pdata->liveID;
                      if(NULL != recordRun)
                      {
 	                    delete recordRun;
@@ -297,27 +297,31 @@ int parseResdata(string &resdata,  int ret ,PARSE_TYPE m_Type)
 		        switch(m_Type) 
                 {
 		        	case PARSE_TYPE::GETAPI:  //解析获取API接口
-	                {
-				        string IP = m_object.value("ip", "oops");
-                        string port = m_object.value("port", "oops");
+	               {
+			            json data_object = m_object.at("data");
+						
+		                string IP = data_object.value("ip", "oops");
+                        string port = data_object.value("port", "oops");
                         IpPort = IpPort.append(IP).append(":").append(port);
 
-                        ServerCreate = m_object.value("server_create", "oops");
-                        ServerDelete = m_object.value("server_delete", "oops");
-                        ServerSelect = m_object.value("server_select", "oops");
+                        ServerCreate = data_object.value("server_create", "oops");
+                        ServerDelete = data_object.value("server_delete", "oops");
+                        ServerSelect = data_object.value("server_select", "oops");
                         //ServerUpdate = m_object.value("server_update", "oops");
 
-                        liveUpdate = m_object.value("live_update", "oops");
-                        liveSelect = m_object.value("live_select", "oops");
-                        liveUpload = m_object.value("live_upload", "oops");
+                        liveUpdate = data_object.value("live_update", "oops");
+                        liveSelect = data_object.value("live_select", "oops");
+                        liveUpload = data_object.value("live_upload", "oops");
 
                         cout<<IpPort  <<ServerCreate  <<ServerDelete  <<ServerSelect  <<liveUpdate <<endl;	 
 			            break;
 	               }
 			       case PARSE_TYPE::REGISTONLINE:  //解析注册录制服务
 	               {
-				       record_serverId = m_object.value("ServerID", "oops");
-                       LOG(INFO)<<"录制服务 record_serverId:"<<record_serverId;		
+                                        
+				       record_serverId = m_object.value("serverId", "oops");
+                       LOG(INFO)<<"录制服务 record_serverId:"<<record_serverId;	
+                       printf("serverID: %s", record_serverId.c_str());	
 			           break;
 	               }
 			       case PARSE_TYPE::UPDATA:  //解析定时上传录制在线
@@ -528,7 +532,7 @@ int startServer(void)
 
     //获取Http API 
     url = IPPORT;
-    url = url.append("main?ClientID=3312"); 
+    url = url.append("main?ClientID=1001"); 
     main_ret = m_httpclient->HttpGetData(url.c_str());
     if(0 == main_ret)
     {
@@ -551,7 +555,7 @@ int startServer(void)
    url.append("?serverName=");
    char *format = m_httpclient->UrlEncode(serverName);
    url.append(format);
-   url.append("&serverType=1&serverApi=192.168.1.206:");
+   url.append("&serverType=LiveRecord&serverApi=192.168.1.206:");
    url.append(s_http_port);    
    url.append(APIStr);
    

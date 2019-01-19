@@ -62,6 +62,12 @@ typedef struct AdtsData
 	unsigned char check4 : 6;
 }AdtsData;
 
+//Http接口返回值类型
+enum URL_TYPE{ 
+   SELECT_LIVEURL = 0,
+   SELECT_LIVFLAG,
+   UPDATA_RECORDFLAG
+};
 
 class RecordSaveRunnable
 {
@@ -112,13 +118,16 @@ private:
     int CreateFile(std::string &resData);
 
     //解析http返回json
-    int ParseJsonInfo(std::string &jsonStr ,std::string &resCodeInfo,std::string &liveinfo ,std::string &pullUrl ,bool urlflag);
+    int ParseJsonInfo(std::string &jsonStr ,std::string &resCodeInfo,std::string &liveinfo ,std::string &pullUrl ,URL_TYPE urlflag);
 
     //更新录制状态
     int UpdataRecordflag(LibcurClient *recive_http ,int flag);
 	
 	//上传白板数据
     int UploadWhiteData(LibcurClient *recive_http ,std::string data);
+	
+	//写线程结束上传录制完成状态
+	void UploadRecordStopFlag();
 
 public:
 

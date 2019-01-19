@@ -41,7 +41,7 @@ v 0.0.3
 
 #define CONTENTTYPE "Content-Type: application/x-www-form-urlencoded\r\n"  
 
-#define IPPORT "http://192.168.1.207:8090/live/"
+#define IPPORT "http://192.168.1.205:8080/live/"
 
 #define HTON16(x)  ((x>>8&0xff)|(x<<8&0xff00))
 #define HTON24(x)  ((x>>16&0xff)|(x<<16&0xff0000)|x&0xff00)
@@ -67,7 +67,7 @@ string updateOnlineUrl;  //更新录制在线Url
 
 string  LOGFOLDER =  "./recordlog/";
 
-string  serverName = "LIVE录像";
+string  serverName = "LIVE录像01";
 
 string IpPort = "http://";
 
