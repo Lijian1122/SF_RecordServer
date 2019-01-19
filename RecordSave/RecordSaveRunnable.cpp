@@ -75,7 +75,8 @@ int RecordSaveRunnable::ParseJsonInfo(std::string &jsonStr ,std::string &resCode
 				 }
 				 case URL_TYPE::SELECT_LIVFLAG:  //查询直播状态
 	             {
-					liveinfo = m_object.value("liveFlag", "oops");
+					json liveinfoObj = m_object.at("live_info");
+					liveinfo = liveinfoObj.value("liveFlag", "oops");
                     return main_ret;
 					break;
 				 }
