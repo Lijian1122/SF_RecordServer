@@ -20,21 +20,22 @@ CCycleBuffer::CCycleBuffer(int size)
 int CCycleBuffer::write(char* buf,int count) 
 { 
 	/*resCode 返回值 
-	1.成功写入 剩余空间占用率小于0.5 返回 0;
-	2.成功写入 剩余空间缓冲区占用率大于0.5 返回 1;
+	1.成功写入 已用空间占用率小于0.5 返回 0;
+	2.成功写入 已用空间占用率大于0.5 返回 1;
 	3.缓冲区不足, 无剩余空间 返回 2;*/
 
 	pthread_mutex_lock(&mutex); 
 	int resCode = 0;
 	int leftcount = 0;
    
+    //缓冲区剩余空间
     int leftSize = m_nBufSize - m_usedSize;
 	
     if(leftSize > count || count == leftSize) //缓冲区剩余空间足够
     {	
          if(m_nReadPos > m_nWritePos) //读的位置在写位置前面
 	     {
-		    //剩余空间为读指针和写指针之间的剩余空间
+		    //剩余空间为读指针和写指针之间的空间
 		     memcpy(m_pBuf + m_nWritePos, buf, count); 
              m_nWritePos += count;
 	     }else
@@ -44,8 +45,9 @@ int CCycleBuffer::write(char* buf,int count)
 		    if(leftcount > count  || leftcount == count)//一次可以写入
             { 
                 memcpy(m_pBuf + m_nWritePos, buf, count); 
-                m_nWritePos += count;	
-            }else
+                m_nWritePos += count;
+				
+            }else //两次写入
 		    {
 			  //先把write指针之后的剩余空间填满
 			  memcpy(m_pBuf + m_nWritePos, buf, leftcount); 	 		
@@ -58,7 +60,7 @@ int CCycleBuffer::write(char* buf,int count)
 		
         m_usedSize += count; 
 		
-		//判断缓冲区剩余空间是否大于50%
+		//判断空间使用率是否大于50%
         if(m_usedSize *1.0/m_nBufSize > 0.5)  
         { 
              resCode = 1;   
@@ -102,12 +104,13 @@ int CCycleBuffer::read(char* buf,int count)
 	     }else
 	     {
 		     leftcount = m_nBufSize - m_nReadPos; 
-             if(leftcount > count || leftcount == count) //剩余数据够读取
+             if(leftcount > count || leftcount == count) //剩余数据够读取,一次写入
              {
 		        memcpy(buf, m_pBuf + m_nReadPos, count); 
-                m_nReadPos += count; 		
-		     }else
-             {
+                m_nReadPos += count; 
+				
+		     }else  //两次写入
+             { 
 			    memcpy(buf, m_pBuf + m_nReadPos, leftcount); 
                 m_nReadPos = count - leftcount; 
                 memcpy(buf + leftcount, m_pBuf, m_nReadPos);		

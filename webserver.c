@@ -185,7 +185,7 @@ void *recordManage_fun(void *data)
                   { 
                      pthread_mutex_unlock(&record_mutex);
     	            
-	             LOG(ERROR) << "启动录制任务失败  ret:"<<ret<<"   直播ID:"<<pdata->liveID;
+	                 LOG(ERROR) << "启动录制任务失败  ret:"<<ret<<"   直播ID:"<<pdata->liveID;
                      if(NULL != recordRun)
                      {
 	                    delete recordRun;
@@ -249,19 +249,20 @@ void *stopRecord_fun(void *data)
         RecordSaveRunnable *m_runnable = DeleteRecordSaveQueue.front();
 		
 		//停止录制任务
+		std::string liveID = m_runnable->GetRecordID();
 	    ret = m_runnable->StopRecord(); 	 
 	    if(0 == ret)
         {
-             LOG(INFO)<< "停止录制任务成功 ret:"<<ret<<"   直播ID:"<<m_runnable->m_recordID;                
+             LOG(INFO)<< "停止录制任务成功 ret:"<<ret<<"   直播ID:"<<liveID;                
         }else
         {
-             LOG(ERROR) << "停止录制任务失败 ret:"<<ret<<"   直播ID:"<<m_runnable->m_recordID;
+             LOG(ERROR) << "停止录制任务失败 ret:"<<ret<<"   直播ID:"<<liveID;
         }
 		
+		//在录制对象队列中找到liveID，删除录制对象
 		pthread_mutex_lock(&record_mutex);
-        std::string liveID = m_runnable->m_recordID;
-	    std::map<std::string, RecordSaveRunnable*>::iterator it = RecordSaveMap.find(m_runnable->m_recordID);			
-        if(it != RecordSaveMap.end()) //在录制对象队列中找到liveID，删除录制对象
+	    std::map<std::string, RecordSaveRunnable*>::iterator it = RecordSaveMap.find(liveID);			
+        if(it != RecordSaveMap.end()) 
 	    {
 		  RecordSaveRunnable *m_runnable = (it)->second;
 		  
@@ -296,7 +297,7 @@ int parseResdata(string &resdata,  int ret ,PARSE_TYPE m_Type)
             {	  
 		        switch(m_Type) 
                 {
-		        	case PARSE_TYPE::GETAPI:  //解析获取API接口
+		           case PARSE_TYPE::GETAPI:  //解析获取API接口
 	               {
 			            json data_object = m_object.at("data");
 						
@@ -321,7 +322,7 @@ int parseResdata(string &resdata,  int ret ,PARSE_TYPE m_Type)
                                         
 				       record_serverId = m_object.value("serverId", "oops");
                        LOG(INFO)<<"录制服务 record_serverId:"<<record_serverId;	
-                       printf("serverID: %s", record_serverId.c_str());	
+                       printf("serverID: %s\n", record_serverId.c_str());	
 			           break;
 	               }
 			       case PARSE_TYPE::UPDATA:  //解析定时上传录制在线
