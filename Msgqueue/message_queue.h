@@ -1,9 +1,9 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
-#include <string.h>  // strcpy
+#include <string.h>
 #include <stdio.h>
 #include <sys/types.h>
-#include <unistd.h>  // read
+#include <unistd.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
 
@@ -15,8 +15,8 @@ extern "C" {
 #define PROJ_ID  0x666
 #define MSGSIZE 1024
 
-#define SERVER_TYPE 1   // 服务端发送消息类型
-#define CLIENT_TYPE 2   // 客户端发送消息类型
+#define SERVER_TYPE 1  //服务端发送消息类型
+#define CLIENT_TYPE 2   //客户端发送消息类型
 
 typedef struct msgstruct          // 消息结构
 {

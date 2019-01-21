@@ -41,7 +41,7 @@ RecordSaveRunnable::RecordSaveRunnable(char *pdata)
 }
 
 
-//解析http返回json
+//解析Http返回json
 int RecordSaveRunnable::ParseJsonInfo(std::string &jsonStr ,std::string &resCodeInfo ,std::string &liveinfo ,std::string &pullUrl,URL_TYPE urlflag)
 {
     int main_ret = 0;
@@ -81,12 +81,12 @@ int RecordSaveRunnable::ParseJsonInfo(std::string &jsonStr ,std::string &resCode
 					break;
 				 }
 			 }
-          }else
-          {  
+         }else
+         {  
               std::cout<<main_ret<<endl;
               resCodeInfo = m_object.value("msg", "oops");
               LOG(ERROR)<<" Http接口返回异常  ret:"<<main_ret<<"  resCodeInfo:"<<resCodeInfo<<"  直播ID:"<<m_recordID;            
-          }
+         }
        }else
        {
           LOG(ERROR)<<" Http接口返回数据不全 直播ID:"<<m_recordID;

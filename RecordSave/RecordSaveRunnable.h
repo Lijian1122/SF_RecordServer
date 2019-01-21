@@ -82,6 +82,9 @@ public:
     
 	//停止录制任务
     int StopRecord();
+	
+    //获取直播ID
+	std::string GetRecordID(return m_recordID);
 
 protected:
 
@@ -129,12 +132,11 @@ private:
 	//写线程结束上传录制完成状态
 	void UploadRecordStopFlag();
 
-public:
+  
+private:
 
    /*录制ID*/
    string m_recordID;
-   
-private:
 
    /*音频解析所需要数据结构*/
    int iHasAudioSpecificConfig;
