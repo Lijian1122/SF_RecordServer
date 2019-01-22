@@ -383,7 +383,7 @@ void checkdisk_fun()
 
     if(mbFreedisk < 2048)
     {
-       LOG(WARNING)<<"磁盘空间即将不足 剩余空间:"<<mbFreedisk;
+       LOG(ERROR)<<"磁盘空间即将不足 剩余空间:"<<mbFreedisk;
     }
 }
 
