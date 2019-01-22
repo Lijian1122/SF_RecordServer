@@ -693,8 +693,8 @@ void *RecordSaveRunnable::rtmpSave_f()
   
 		  if(readTagSize == 11 + tagdataSize)
 	      {
-			  ret =  WriteFile(readbuf,  11 + datasize);
-			  if(ret != 0)
+			  m_ret =  WriteFile(tagHead_buf, tagData_buf, tagdataSize);
+			  if(m_ret != 0)
 			  {
 				 LOG(ERROR) << "写入tag长度失败共:  "<< tagdataSize<<"字节未写入 直播ID:"<<m_recordID;   
 			  }
