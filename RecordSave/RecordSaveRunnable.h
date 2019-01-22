@@ -84,7 +84,7 @@ public:
     int StopRecord();
 	
     //获取直播ID
-	std::string GetRecordID(return m_recordID);
+    string GetRecordID(){return m_recordID;};
 
 protected:
 
