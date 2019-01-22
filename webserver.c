@@ -152,88 +152,91 @@ end:
   }
 }
 
-//处理录制参数 线程
+//处理录制参数线程
 void *recordManage_fun(void *data)
 {
     int ret = 0;
     while(recordMange_flag)
     {      
         sem_wait(&bin_sem); 
-	
-        liveParmStruct *pdata = liveParmQueue.front();
+		
+		if(!liveParmQueue.empty()) //队列非空
+		{	
+             liveParmStruct *pdata = liveParmQueue.front();
                 
-        LOG(INFO) << "管理线程获取参数 直播ID:"<<pdata->liveID<<"  Type:"<<pdata->liveType;
+             LOG(INFO) << "管理线程获取参数 直播ID:"<<pdata->liveID<<"  Type:"<<pdata->liveType;
 
-        if((strcmp(pdata->liveType,"0")) == 0) //开始录制
-        {      
-			 pthread_mutex_lock(&record_mutex); 
+             if((strcmp(pdata->liveType,"0")) == 0) //开始录制
+             {      
+			      pthread_mutex_lock(&record_mutex); 
 			 
-			 //判断liveID是否已经存在
-             if(RecordSaveMap.find(pdata->liveID) == RecordSaveMap.end()) //录制对象队列不存在本ID,加入队列
-			 {
-				  //新建录制对象,并启动录制
-				  RecordSaveRunnable *recordRun = new RecordSaveRunnable(pdata->liveID);   
-                  ret = recordRun->StartRecord();
+			      //判断liveID是否已经存在
+                  if(RecordSaveMap.find(pdata->liveID) == RecordSaveMap.end()) //录制对象队列不存在本ID,加入队列
+			      {
+				      //新建录制对象,并启动录制
+				      RecordSaveRunnable *recordRun = new RecordSaveRunnable(pdata->liveID);   
+                      ret = recordRun->StartRecord();
 				  
-				  if(ret == 0)//启动成功
-                  {		  					  
-					  RecordSaveMap.insert(std::pair<std::string, RecordSaveRunnable*>(pdata->liveID,recordRun));       
-                      pthread_mutex_unlock(&record_mutex);
+				     if(ret == 0)//启动成功
+                     {		  					  
+					     RecordSaveMap.insert(std::pair<std::string, RecordSaveRunnable*>(pdata->liveID,recordRun));       
+                         pthread_mutex_unlock(&record_mutex);
 
-                      LOG(INFO) << "启动录制任务成功   ret:"<<ret<<"   直播ID:"<<pdata->liveID;
-                  }else
-                  { 
-                     pthread_mutex_unlock(&record_mutex);
-    	            
-	                 LOG(ERROR) << "启动录制任务失败  ret:"<<ret<<"   直播ID:"<<pdata->liveID;
-                     if(NULL != recordRun)
-                     {
-	                    delete recordRun;
-                        recordRun = NULL;
-                     }            					
-				 }					
-            }else
-            {
+                         LOG(INFO) << "启动录制任务成功   ret:"<<ret<<"   直播ID:"<<pdata->liveID;
+                     }else
+                     { 
+                        pthread_mutex_unlock(&record_mutex);
+    	             
+	                    LOG(ERROR) << "启动录制任务失败  ret:"<<ret<<"   直播ID:"<<pdata->liveID;
+                        if(NULL != recordRun)
+                        {
+	                       delete recordRun;
+                           recordRun = NULL;
+                        }            					
+				    }					
+                }else
+                {
 				   pthread_mutex_unlock(&record_mutex);
                    LOG(ERROR) << "该录制任务正在录制中  直播ID:"<<pdata->liveID;         
-            }    	 
-       }else if(strcmp(pdata->liveType,"1") == 0)  //结束录制
-       {
-			pthread_mutex_lock(&record_mutex);
-			
-			std::map<std::string, RecordSaveRunnable*>::iterator iter = RecordSaveMap.find(pdata->liveID);
+                } 
+				
+           }else if(strcmp(pdata->liveType,"1") == 0)  //停止录制
+           {
+			  
+			   pthread_mutex_lock(&record_mutex);
+			 
+			   std::map<std::string, RecordSaveRunnable*>::iterator iter = RecordSaveMap.find(pdata->liveID);
             			
-            if(iter != RecordSaveMap.end()) //在录制对象队列中找到找到liveID,停止录制
-		    {
-				 RecordSaveRunnable *m_runnable = (iter)->second;
-				 pthread_mutex_unlock(&record_mutex);
+               if(iter != RecordSaveMap.end()) //在录制对象队列中找到找到liveID,停止录制
+		       {
+				   RecordSaveRunnable *m_runnable = (iter)->second;
+				   pthread_mutex_unlock(&record_mutex);
 				 	
-                 //发送停止删除录制任务 信号					
-				 sem_wait(&record_blank); 	 
-                 DeleteRecordSaveQueue.push(m_runnable);		 
-                 sem_post(&record_sem); 
-			}else
-			{
+                   //发送停止删除录制任务 信号					
+				   sem_wait(&record_blank); 	 
+                   DeleteRecordSaveQueue.push(m_runnable);		 
+                   sem_post(&record_sem); 
+			 }else
+			 {
 				 pthread_mutex_unlock(&record_mutex);
                  LOG(ERROR) << "未找到该录制任务  直播ID:"<<pdata->liveID;    
-			}
-     }
+			 }
+         }
 		
-     if(NULL != pdata->liveID)
-     {
-         free(pdata->liveID);
-         pdata->liveID = NULL;
-     }
-     if(NULL != pdata->liveType)
-     {
-	    free(pdata->liveType);
-        pdata->liveType = NULL;
-     }
+        if(NULL != pdata->liveID)
+        {
+           free(pdata->liveID);
+           pdata->liveID = NULL;
+        }
+        if(NULL != pdata->liveType)
+        {
+	       free(pdata->liveType);
+           pdata->liveType = NULL;
+        }
 		
-     liveParmQueue.pop();
-       
-     sem_post(&bin_blank); 
-	 
+        liveParmQueue.pop();     
+        sem_post(&bin_blank); 
+     } 
    }
    return data;
 }
@@ -246,41 +249,43 @@ void *stopRecord_fun(void *data)
     {      
         sem_wait(&record_sem); 	
 		
-        RecordSaveRunnable *m_runnable = DeleteRecordSaveQueue.front();
+		if(!DeleteRecordSaveQueue.empty()) //队列非空
+		{	
+            RecordSaveRunnable *m_runnable = DeleteRecordSaveQueue.front();
 		
-		//停止录制任务
-		std::string liveID = m_runnable->GetRecordID();
+		    //停止录制任务
+		    std::string liveID = m_runnable->GetRecordID();
 		
-	    ret = m_runnable->StopRecord(); 	 
-	    if(0 == ret)
-        {
-             LOG(INFO)<< "停止录制任务成功 ret:"<<ret<<"   直播ID:"<<liveID;                
-        }else
-        {
-             LOG(ERROR) << "停止录制任务失败 ret:"<<ret<<"   直播ID:"<<liveID;
-        }
+	        ret = m_runnable->StopRecord(); 	 
+	        if(0 == ret)
+            {
+                LOG(INFO)<< "停止录制任务成功 ret:"<<ret<<"   直播ID:"<<liveID;                
+            }else
+            {
+               LOG(ERROR) << "停止录制任务失败 ret:"<<ret<<"   直播ID:"<<liveID;
+            }
 		
-		//在录制对象队列中找到liveID，删除录制对象
-		pthread_mutex_lock(&record_mutex);
-	    std::map<std::string, RecordSaveRunnable*>::iterator it = RecordSaveMap.find(liveID);			
-        if(it != RecordSaveMap.end()) 
-	    {
-		  RecordSaveRunnable *m_runnable = (it)->second;
+		    //在录制对象队列中找到liveID，删除录制对象
+		    pthread_mutex_lock(&record_mutex);
+	        std::map<std::string, RecordSaveRunnable*>::iterator it = RecordSaveMap.find(liveID);			
+            if(it != RecordSaveMap.end()) 
+	        {
+		        RecordSaveRunnable *m_runnable = (it)->second;
 		  
-		  //删除队列中的录制任务
-		  if(NULL != m_runnable)
-		  {
-			  delete m_runnable;
-			  m_runnable = NULL;
-		  }
-		  LOG(INFO)<<"删除录制任务成功  直播ID:"<< liveID ;
-		  RecordSaveMap.erase(it);
-	   }	        
-	   pthread_mutex_unlock(&record_mutex);
+		        //删除队列中的录制任务
+		        if(NULL != m_runnable)
+		        {
+			       delete m_runnable;
+			       m_runnable = NULL;
+		        }
+		        LOG(INFO)<<"删除录制任务成功  直播ID:"<< liveID ;
+		        RecordSaveMap.erase(it);
+	       }	        
+	       pthread_mutex_unlock(&record_mutex);
 	   
-	   DeleteRecordSaveQueue.pop();
-	   
-       sem_post(&record_blank); 
+	       DeleteRecordSaveQueue.pop();   
+           sem_post(&record_blank); 
+		}
 	}
 	return data;
 }
@@ -433,7 +438,6 @@ void *httpTime_fun(void *pdata)
    s_httpclient = new LibcurClient;
 
    updateOnlineUrl = IpPort;
-
    updateOnlineUrl.append(ServerUpdate);
    updateOnlineUrl.append("serverId=");
    
@@ -666,7 +670,6 @@ int startServer(void)
 //停止服务
 int stopServer(void)
 {   
-
     int main_ret = 0;
 
     //定时上传录制状态线程退出
