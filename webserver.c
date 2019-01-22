@@ -367,10 +367,12 @@ void updateOnline_fun()
        //LOG(ERROR) << "调用定时上在线状态接口失败  main_ret:"<<main_ret;  
     }	
 }
+
 //检测磁盘空间
 void checkdisk_fun()
 {
     char path[1024] ;
+	char *p = getcwd(path , 1024); //获取当前路径
 
     struct statfs diskInfo;
     statfs(path, &diskInfo);
