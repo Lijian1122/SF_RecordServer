@@ -143,7 +143,7 @@ end:
       nc->flags |= MG_F_SEND_AND_CLOSE;
 
       break;
-      }
+    }
     case MG_EV_CLOSE: 
 	{
       LOG(INFO) << "Connection closed:"<<nc;   
@@ -208,7 +208,7 @@ void *recordManage_fun(void *data)
 				 RecordSaveRunnable *m_runnable = (iter)->second;
 				 pthread_mutex_unlock(&record_mutex);
 				 	
-                 //发送停止删除 信号					
+                 //发送停止删除录制任务 信号					
 				 sem_wait(&record_blank); 	 
                  DeleteRecordSaveQueue.push(m_runnable);		 
                  sem_post(&record_sem); 
@@ -250,6 +250,7 @@ void *stopRecord_fun(void *data)
 		
 		//停止录制任务
 		std::string liveID = m_runnable->GetRecordID();
+		
 	    ret = m_runnable->StopRecord(); 	 
 	    if(0 == ret)
         {
@@ -277,7 +278,8 @@ void *stopRecord_fun(void *data)
 	   }	        
 	   pthread_mutex_unlock(&record_mutex);
 	   
-	   DeleteRecordSaveQueue.pop();    
+	   DeleteRecordSaveQueue.pop();
+	   
        sem_post(&record_blank); 
 	}
 	return data;
