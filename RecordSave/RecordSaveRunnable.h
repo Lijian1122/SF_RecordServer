@@ -84,7 +84,7 @@ public:
     int StopRecord();
 	
     //获取直播ID
-    string GetRecordID(){return m_recordID;};
+	string GetRecordID(){return m_recordID;};
 
 protected:
 
@@ -131,8 +131,7 @@ private:
 	
 	//写线程结束上传录制完成状态
 	void UploadRecordStopFlag();
-
-  
+	
 private:
 
    /*录制ID*/

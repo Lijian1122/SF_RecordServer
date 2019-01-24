@@ -120,15 +120,16 @@ int RecordSaveRunnable::StartRecord()
          {
             LOG(ERROR) << "获取直播信息失败   ret:"<<m_ret<<" 直播ID:"<<m_recordID;
             m_ret = 1;
-            return m_ret;
+           // return m_ret;
          }
       }else
       {              
          LOG(ERROR) << "调用直播信息查询接口失败:"<<m_ret<<" 直播ID:"<<m_recordID;
-         return m_ret;
+        // return m_ret;
       }
 
-      int ret = CreateFile(resData);  //新建文件,同时把直播信息写入json文件
+	  //新建文件,同时把直播信息写入json文件
+      int ret = CreateFile(resData);  
 
       if(0 != ret)
       {
@@ -390,8 +391,8 @@ void *RecordSaveRunnable::rtmpRecive_f()
     double duration = 0.0;
     uint32_t bufferTime = (uint32_t)(duration * 1000.0) + 5000; 
 
-    m_pullUrl.append(m_recordID);
-	//m_pullUrl = "rtmp://www.bj-mobiletv.com:8000/live/FreeManCamera2018003";
+    // m_pullUrl.append(m_recordID);
+    m_pullUrl = "rtmp://www.bj-mobiletv.com:8000/live/FreeManCamera2018003";
 
     recive_httpflag = 1;
     int m_ret = UpdataRecordflag(recive_http,recive_httpflag);
@@ -613,6 +614,7 @@ void *RecordSaveRunnable::rtmpSave_f()
 	int m_ret = 0;
     bool tagFlag = true;
 	int ToRead = 0;
+	int readTagSize = 0;
 
     while(runningc)
     {	              	
@@ -666,7 +668,7 @@ void *RecordSaveRunnable::rtmpSave_f()
 	    {   
           
 		   ToRead = tagdataSize + tagSize;
-	       m_ret = m_cycleBuffer->read(tagData_buf,ToRead);  //去读取Tag数据	+ 4字节TagSize
+	       m_ret = m_cycleBuffer->read(tagData_buf,ToRead);  //去读取Tag数据 + 4字节TagSize
 		   
 		   if(0 != m_ret) //未读取到Tag数据
 		   {
@@ -683,13 +685,29 @@ void *RecordSaveRunnable::rtmpSave_f()
                   LOG(INFO) << "写缓存结束，缓冲区数据为空, 直播ID:"<<m_recordID;				  
 				  break;
 			   }	    
-		  }  			
-		  m_ret =  WriteFile(tagHead_buf, tagData_buf, tagdataSize);
+		  } 
+		  
+		  //解析四字节的TagSize长度
+		  memcpy(&readTagSize, tagData_buf + tagdataSize, tagSize);
+          readTagSize = HTON32(readTagSize);
+  
+		  if(readTagSize == 11 + tagdataSize)
+	      {
+			  m_ret =  WriteFile(tagHead_buf, tagData_buf, tagdataSize);
+			  if(m_ret != 0)
+			  {
+				 LOG(ERROR) << "写入tag长度失败共:  "<< tagdataSize<<"字节未写入 直播ID:"<<m_recordID;   
+			  }
+		 }else
+		 {
+			 LOG(ERROR) << "解析tag数据失败共:  "<< tagdataSize<<"字节未写入 直播ID:"<<m_recordID; 
+		 }		  
+		/*   m_ret =  WriteFile(tagHead_buf, tagData_buf, tagdataSize);
 				
 	      if(m_ret != 0)
 		  {
 			  LOG(ERROR) << "写入tag长度失败共:  "<< tagdataSize<<"字节未写入 直播ID:"<<m_recordID;
-		  }
+		  } */
 	  	  		 		  
           //重置Tag头flag				
 	      tagFlag = true;	
@@ -725,7 +743,7 @@ void RecordSaveRunnable::UploadRecordStopFlag()
         {
          LOG(ERROR) << "调用上传录制完成状态接口失败   m_ret:"<<m_ret<<" 直播ID"<<m_recordID;      
         }
-    }else  //录制异常结束,自动删除队列中录制任务
+    }else  //录制异常结束,删除队列中录制任务
     {
 		
         std::string UrlStr = "http://localhost:";
