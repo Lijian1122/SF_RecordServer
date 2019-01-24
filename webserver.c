@@ -141,18 +141,18 @@ void *recordManage_fun(void *data)
     void *parmdata = NULL;
     while(recordMange_flag)
     {      
-        //录制参数出 参数队列
-        parmdata = LiveParmList->popLockList();
+       //录制参数出 参数队列
+       parmdata = LiveParmList->popLockList();
      
        if(NULL != parmdata)
        {
 		
-	liveParmStruct *pdata = (liveParmStruct*)parmdata;
+	     liveParmStruct *pdata = (liveParmStruct*)parmdata;
                 
-        LOG(INFO) << "管理线程获取参数 直播ID:"<<pdata->liveID<<"  Type:"<<pdata->liveType;
+         LOG(INFO) << "管理线程获取参数 直播ID:"<<pdata->liveID<<"  Type:"<<pdata->liveType;
 
-        if((strcmp(pdata->liveType,"0")) == 0) //开始录制
-        {      
+         if((strcmp(pdata->liveType,"0")) == 0) //开始录制
+         {      
 			 //判断liveID是否已经存在
 			 if(NULL == RecordSaveList->findList((void*)pdata->liveID))
 			 {
@@ -177,8 +177,8 @@ void *recordManage_fun(void *data)
 			 {
                   LOG(ERROR) << "该录制任务正在录制中  直播ID:"<<pdata->liveID;         
              }			
-       }else if(strcmp(pdata->liveType,"1") == 0)  //停止录制
-       {
+        }else if(strcmp(pdata->liveType,"1") == 0)  //停止录制
+        {
 			 //判断liveID是否已经存在
 			 void *recordData = RecordSaveList->findList((void*)pdata->liveID);
 			 if(NULL != recordData)//在录制对象队列中找到找到liveID
@@ -192,19 +192,19 @@ void *recordManage_fun(void *data)
              {
 				 LOG(ERROR) << "未找到该录制任务  直播ID:"<<pdata->liveID;            
 			 }				 
-      }	
-      if(NULL != pdata->liveID)
-      {
+       }	
+       if(NULL != pdata->liveID)
+       {
            free(pdata->liveID);
            pdata->liveID = NULL;
-      }
-      if(NULL != pdata->liveType)
-      {
+       }
+       if(NULL != pdata->liveType)
+       {
 	       free(pdata->liveType);
            pdata->liveType = NULL;
-      }
+       }
  
-     }
+    }
    }
    return data;
 }
@@ -221,27 +221,27 @@ void *stopRecord_fun(void *data)
       
         if(NULL != m_data)
         {
-
             RecordSaveRunnable *m_runnable = (RecordSaveRunnable*)m_data;
 	
-            string Id = m_runnable->GetRecordID();
-            printf(" liveID: %s\n", Id.c_str());	
+            //string Id = m_runnable->GetRecordID();
+            //printf(" liveID: %s\n", Id.c_str());	
+			
             ret = m_runnable->StopRecord(); 	 
-	    if(0 == ret)
+	        if(0 == ret)
             {
-                LOG(INFO)<< "停止录制任务成功 ret:"<<ret<<"   直播ID:"<<m_runnable->GetRecordID();                
-             }else
+                 LOG(INFO)<< "停止录制任务成功 ret:"<<ret<<"   直播ID:"<<m_runnable->GetRecordID();                
+            }else
             {
-                LOG(ERROR) << "停止录制任务失败 ret:"<<ret<<"   直播ID:"<<m_runnable->GetRecordID();
+                 LOG(ERROR) << "停止录制任务失败 ret:"<<ret<<"   直播ID:"<<m_runnable->GetRecordID();
             }
 	
-	     //删除录制对象
-	    if(NULL != m_runnable)
-	    {
-                     printf("删除 liveID: %s\n", Id.c_str());
-		     delete m_runnable;
-	            m_runnable = NULL;
-	     }
+	        //删除录制对象
+	        if(NULL != m_runnable)
+	        {
+              printf("删除 liveID: %s\n", Id.c_str());
+		      delete m_runnable;
+	          m_runnable = NULL;
+	        }
         }
     }
 	return data;

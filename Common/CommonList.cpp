@@ -37,9 +37,9 @@ void *CommonList::popLockList()
     {
 	  data = m_list.front();
 	  m_list.pop_front();
-     }
-     sem_post(&bin_blank); 	
-     return data;
+    }
+    sem_post(&bin_blank); 	
+    return data;
 }
 
 void CommonList::pushList(void *data)

@@ -48,10 +48,10 @@ public:
 	/*加锁出队列*/
     void* popLockList();
 	
-	/*无锁入队列*/
+	/*不加锁入队列*/
 	void pushList(void* data);
 	
-	/*无锁出队列*/
+	/*不加锁出队列*/
 	void popList(void *data);
 	
 	/*查找队列中元素*/
