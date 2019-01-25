@@ -18,7 +18,10 @@
 #include <iostream>
 #include <algorithm>
 #include "../RecordSave/RecordSaveRunnable.h"
+#include "glog/logging.h"
 
+
+/*根据liveId查找队列中的录制对象*/
 typedef struct finder_t
 {
   finder_t(char *n)
@@ -41,6 +44,7 @@ class CommonList
 public:
     CommonList(bool lockFlag);
     ~CommonList();
+    int getRescode(){return m_ret;};
     
 	/*加锁入队列*/
     void pushLockList(void* data);

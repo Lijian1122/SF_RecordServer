@@ -238,7 +238,7 @@ void *stopRecord_fun(void *data)
 	        //删除录制对象
 	        if(NULL != m_runnable)
 	        {
-              printf("删除 liveID: %s\n", Id.c_str());
+                  //printf("删除 liveID: %s\n", Id.c_str());
 		      delete m_runnable;
 	          m_runnable = NULL;
 	        }
@@ -335,7 +335,8 @@ void updateOnline_fun()
 void checkdisk_fun()
 {
     char path[1024] ;
-	char *p = getcwd(path , 1024); //获取当前路径
+    char *p = getcwd(path , 1024); //获取当前路径
+    printf("current dir:%s\n", p);
 
     struct statfs diskInfo;
     statfs(path, &diskInfo);
@@ -555,9 +556,19 @@ int startServer(void)
 
     //初始化三个队列
     LiveParmList = new CommonList(true);
+    if(0 != LiveParmList->getRescode())
+    {
+       LOG(ERROR) << "初始化参数队列失败  main_ret:"<<LiveParmList->getRescode();
+       return main_ret;
+    }
     RecordSaveList = new CommonList(false);
+  
     DeleteRecordList = new CommonList(true);
-
+    if(0 !=  DeleteRecordList->getRescode())
+    {
+       LOG(ERROR) << "初始化删除对象队列失败 main_ret:"<< DeleteRecordList->getRescode();
+       return main_ret;
+    }
  
     //创建录制任务管理线程
     main_ret = pthread_create(&recordManage_t, NULL, recordManage_fun, NULL);
