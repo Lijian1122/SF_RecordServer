@@ -1,6 +1,7 @@
 #include "CCycleBuffer.h"
 #include <assert.h>
 #include <memory.h>
+#include <stdio.h>
  
 CCycleBuffer::CCycleBuffer(int size)
 {
@@ -90,7 +91,8 @@ int CCycleBuffer::read(char* buf,int count)
 
 	/*resCode 返回值 
 	1. 正常读取 返回0;
-	2. 数据不足,返回1;*/
+	2. 缓冲区不为空，但数据不足,返回1;
+        3. 缓冲区为空，返回2*/
 	
     pthread_mutex_lock(&mutex);
 	int leftcount = 0;
@@ -118,8 +120,9 @@ int CCycleBuffer::read(char* buf,int count)
 	     }	 
          m_usedSize -= 	count;	
 	}else
-	{    
-         if(m_usedSize  == 0) //缓冲区为空，等待非空信号
+	{
+    
+          if(m_usedSize  == 0) //缓冲区为空，等待非空信号
 	     {
 		     struct timespec outtime;
              struct timeval now;
@@ -128,13 +131,13 @@ int CCycleBuffer::read(char* buf,int count)
              outtime.tv_nsec = now.tv_usec*1000 + 3 * 1000 * 1000;
              outtime.tv_sec += outtime.tv_nsec/(1000 * 1000 *1000);
              outtime.tv_nsec %= (1000 * 1000 *1000);   
-	         int m_ret = pthread_cond_timedwait(&notempty, &mutex ,&outtime);  	
-		     count = 0;
-		 }else
-		 {          
-		     count = m_usedSize;	 
-		 }
-		 resCode = 1;  		
+	         int m_ret = pthread_cond_timedwait(&notempty, &mutex ,&outtime); 
+                 resCode = 2;
+
+	    }else
+	    {          
+                resCode = 1;	 
+	     }  		
 	}
  
     pthread_cond_signal(&notfull);		

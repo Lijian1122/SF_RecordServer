@@ -34,9 +34,6 @@ RecordSaveRunnable::RecordSaveRunnable(char *pdata)
      afile = NULL;
      vfile = NULL;
      wfile = NULL;
-
-     m_endRecvFlag = false;
-	
 	 timestampSize = 4;
 }
 
@@ -49,21 +46,18 @@ int RecordSaveRunnable::ParseJsonInfo(std::string &jsonStr ,std::string &resCode
     if(!jsonStr.empty())
     {  
         json m_object = json::parse(jsonStr);
-  
         if(m_object.is_object())
         {
            string resCode = m_object.value("code", "oops");
            main_ret = atoi(resCode.c_str() );
-
            if(0 == main_ret)
            {
-			  resCodeInfo = m_object.value("msg", "oops");	
-			  
+			  resCodeInfo = m_object.value("msg", "oops");				  
 			  switch(urlflag) 
               {
 		         case URL_TYPE::UPDATA_RECORDFLAG:  //更新录制状态
 	             {
-					 break;
+					  break;
 				 }
 				 case URL_TYPE::SELECT_LIVEURL:  //查询直播信息及拉流URL
 	             {
@@ -75,17 +69,15 @@ int RecordSaveRunnable::ParseJsonInfo(std::string &jsonStr ,std::string &resCode
 				 }
 				 case URL_TYPE::SELECT_LIVFLAG:  //查询直播状态
 	             {
-					json liveinfoObj = m_object.at("live_info");
-					liveinfo = liveinfoObj.value("liveFlag", "oops");
-                    return main_ret;
-					break;
+					 json liveinfoObj = m_object.at("live_info");
+					 liveinfo = liveinfoObj.value("liveFlag", "oops");
+					 break;
 				 }
 			 }
          }else
          {  
-              std::cout<<main_ret<<endl;
-              resCodeInfo = m_object.value("msg", "oops");
-              LOG(ERROR)<<" Http接口返回异常  ret:"<<main_ret<<"  resCodeInfo:"<<resCodeInfo<<"  直播ID:"<<m_recordID;            
+            resCodeInfo = m_object.value("msg", "oops");
+            LOG(ERROR)<<" Http接口返回异常  ret:"<<main_ret<<"  resCodeInfo:"<<resCodeInfo<<"  直播ID:"<<m_recordID;            
          }
        }else
        {
@@ -95,7 +87,7 @@ int RecordSaveRunnable::ParseJsonInfo(std::string &jsonStr ,std::string &resCode
     }else
     {
         LOG(ERROR) << "Http接口返回数据为空  直播ID:"<<m_recordID;
-        int main_ret = 2;
+        main_ret = 2;
     }
 	return main_ret;
 }
@@ -120,12 +112,12 @@ int RecordSaveRunnable::StartRecord()
          {
             LOG(ERROR) << "获取直播信息失败   ret:"<<m_ret<<" 直播ID:"<<m_recordID;
             m_ret = 1;
-           // return m_ret;
+            //return m_ret;
          }
       }else
       {              
          LOG(ERROR) << "调用直播信息查询接口失败:"<<m_ret<<" 直播ID:"<<m_recordID;
-        // return m_ret;
+         //return m_ret;
       }
 
 	  //新建文件,同时把直播信息写入json文件
@@ -265,8 +257,8 @@ int RecordSaveRunnable::CreateFile(std::string &resData)
          memset(vFileStr,0,1024);
          sprintf(vFileStr,"%s%s%s%d%s",fileDir,m_recordID.c_str(),"(+",i,").h264");
 
-        memset(wFileStr,0,1024);
-        sprintf(wFileStr,"%s%s%s%d%s",fileDir,m_recordID.c_str(),"(+",i,").json");
+         memset(wFileStr,0,1024);
+         sprintf(wFileStr,"%s%s%s%d%s",fileDir,m_recordID.c_str(),"(+",i,").json");
      }
 
      //printf("文件名: %s %s %s \n", aFileStr, vFileStr, wFileStr);
@@ -354,19 +346,20 @@ int RecordSaveRunnable::BrokenlineReconnection(int re_Connects)
 		
         //重连初始化
         ret = BrokenlineReconnectionInit(m_pRtmp);
-		return ret;
-	}
-	
-	LOG(ERROR) << "重连次数超过三次，停止录制任务 直播ID:"<<m_recordID;
+		
+	}else
+	{
+	   LOG(ERROR) << "重连次数超过三次，停止录制任务 直播ID:"<<m_recordID;
                       
-    save_httpflag = false;
-    runningp = 0;
-    recive_httpflag = 5 ; //连不上rtmp服务
+       save_httpflag = false;
+       runningp = 0;
+       recive_httpflag = 5 ; //连不上rtmp服务
 	
-	//上传录制状态
-    m_ret = UpdataRecordflag(recive_http,recive_httpflag);
+	   //上传录制状态
+       m_ret = UpdataRecordflag(recive_http,recive_httpflag);
 	
-	ret = 1;
+	   ret = 1;
+	}	
 	return ret;
 }
 
@@ -386,8 +379,7 @@ void *RecordSaveRunnable::rtmpRecive_f()
     }
 	memset(buf, 0, bufsize);
 	
-	int re_Connects = 0;  //重连次数
-  	
+	int re_Connects = 0;  //rtmp重连次数
     double duration = 0.0;
     uint32_t bufferTime = (uint32_t)(duration * 1000.0) + 5000; 
 
@@ -399,17 +391,15 @@ void *RecordSaveRunnable::rtmpRecive_f()
  
 begin: 
 
-     m_pRtmp = RTMP_Alloc();
-    
+     m_pRtmp = RTMP_Alloc();    
      RTMP_Init(m_pRtmp);
-
      m_pRtmp->Link.timeout = 30;
    
      LOG(INFO) << "开始解析录制  rtmp:"<<m_pullUrl<<"  直播ID:"<<m_recordID;
 
      if(!RTMP_SetupURL(m_pRtmp,(char*)m_pullUrl.c_str()))
      {
-         LOG(ERROR) << "拉流地址设置失败！ "<<m_pullUrl<<"  直播ID:"<<m_recordID;  
+         LOG(ERROR) << "拉流地址设置失败！ "<<m_pullUrl<<"  直播ID:"<<m_recordID;     			 
          m_ret = 3;
          goto end;
      }
@@ -419,25 +409,21 @@ begin:
 
      if(!RTMP_Connect(m_pRtmp, NULL))
      {
-         LOG(ERROR)<< "RTMP服务连接失败 "<<"  直播ID:"<<m_recordID;	    
+         LOG(ERROR)<< "RTMP服务连接失败 "<<"  直播ID:"<<m_recordID;        	 
          m_ret = 4;
          goto end;
      }
    
      if(!RTMP_ConnectStream(m_pRtmp, 0))
      {	
-         LOG(ERROR) << "拉流连接失败  直播ID:"<<m_recordID;
+         LOG(ERROR) << "拉流连接失败  直播ID:"<<m_recordID;		 
          m_ret = 5;
          goto end;
-     }
-    
+     } 
      LOG(INFO) << "录制开始  直播ID:"<<m_recordID;
-
      while(runningp) 
-     {
-		 
-       int nRead = RTMP_Read(m_pRtmp, buf, bufsize);  
-       
+     {	 
+       int nRead = RTMP_Read(m_pRtmp, buf, bufsize);    
        if(nRead > 0) //能读到数据
        {          
           if(0 != re_Connects)
@@ -468,7 +454,7 @@ begin:
 		     {
 			    LOG(ERROR) << " Rtmp数据缓冲区空间不足  "<<nRead<<"字节未写入 直播ID:"<< m_recordID;
 		     }  
-		 }	 
+		  }	 
      }else 
      {  
         //rtmp读数据超时
@@ -534,7 +520,7 @@ begin:
            {
                 LOG(ERROR) <<"直播过程中rtmp连接中断 进行重连 直播ID:"<<m_recordID;         
                 //rtmp重连
-                re_Connects++;
+                re_Connects++;			
                 m_ret = BrokenlineReconnection(re_Connects);
 				if(0 == m_ret)
 			    {					
@@ -550,9 +536,6 @@ begin:
      
 end:
 
-   //设置直播结束flag   
-   m_endRecvFlag = true;
-
    if(RTMP_IsConnected(m_pRtmp))
    {
 	   RTMP_Close(m_pRtmp);
@@ -565,22 +548,30 @@ end:
    if(runningp)
    {
       LOG(INFO) << "RTMP连接准备重连!";
-	  goto begin;
-   }
-   if(NULL != buf)
-   {
-	  free(buf);
-	  buf = NULL;
-   }
-   
-   LOG(INFO) << "读线程结束  直播ID: "<<m_recordID;
-   return  (void*)0;
+	  re_Connects++;
+	  if(re_Connects > 2) //重连三次失败，结束拉流
+	  {
+		 LOG(ERROR) << "三次都没有连上Rtmp服务  直播ID:"<<m_recordID; 
+		 //上传录制状态,连不上rtmp服务
+		 BrokenlineReconnection(re_Connects);		 
+	  }else
+	  {
+		  goto begin;
+	  }	 
+  }
+  if(NULL != buf)
+  {
+	 free(buf);
+	 buf = NULL;
+  }
+  LOG(INFO) << "读线程结束  直播ID: "<<m_recordID;
+  return  (void*)0;
 }
 
 //写线程静态函数
 void *RecordSaveRunnable::Save_fun(void *arg)
 {
-     return static_cast<RecordSaveRunnable*>(arg)->rtmpSave_f();
+    return static_cast<RecordSaveRunnable*>(arg)->rtmpSave_f();
 }
 
 //写线程函数
@@ -620,24 +611,17 @@ void *RecordSaveRunnable::rtmpSave_f()
     {	              	
         if(tagFlag) //开始解析Tag头
         {	
-           ToRead = tagHeadSize;		
-		   m_ret = m_cycleBuffer->read(tagHead_buf,ToRead);
+            ToRead = tagHeadSize;		
+		    m_ret = m_cycleBuffer->read(tagHead_buf,ToRead);
 		      
-		   if(0 != m_ret) //未读取到Tag头
-		   {
-			  if(!m_endRecvFlag)
-			  {
-		          continue;
-				  
-			  }else //读数据已经结束，写数据也结束
-			  {
-				  if(!ToRead)
-				  { 
-			         LOG(ERROR) << "写缓存结束 缓存中还有不足一个Tag头数据 共: "<< ToRead<<"字节  直播ID:"<<m_recordID;
-				  }
-                  LOG(INFO) << "写缓存结束，缓冲区数据为空, 直播ID: "<<m_recordID;				  
-				  break;
-			  }	
+		    if(0 != m_ret) //未读取到Tag头
+		    {
+			   if(0 == runningp && 2 == m_ret) //读线程已经结束，写缓存为空
+			   {
+				  LOG(INFO) << "写缓存结束，缓冲区数据为空, 直播ID: "<<m_recordID;				  
+				  break;		  
+			   }
+			   continue;	  
 		   }
 		 
 		   //获取数据长度
@@ -672,21 +656,14 @@ void *RecordSaveRunnable::rtmpSave_f()
 		   
 		   if(0 != m_ret) //未读取到Tag数据
 		   {
-			   if(!m_endRecvFlag)
-			   { 
-		          continue;	
-				  
-			   }else //读数据已经结束，写数据也结束
-			   {
-				  if(!ToRead)
-				  { 
-					 LOG(ERROR) << "写缓存结束 缓存中还有不足一个完整Tag数据 共: "<< ToRead<<"字节  直播ID:"<<m_recordID;
-				  }
-                  LOG(INFO) << "写缓存结束，缓冲区数据为空, 直播ID:"<<m_recordID;				  
-				  break;
-			   }	    
-		  } 
-		  
+			  if(0 == runningp && 2 == m_ret) //读线程已经结束，写缓存为空
+			  {
+				  LOG(INFO) << "写缓存结束，缓冲区数据为空, 直播ID: "<<m_recordID;				  
+				  break;		  
+			  }
+			  continue;
+		   }	    
+		    
 		  //解析四字节的TagSize长度
 		  memcpy(&readTagSize, tagData_buf + tagdataSize, tagSize);
           readTagSize = HTON32(readTagSize);
@@ -698,10 +675,10 @@ void *RecordSaveRunnable::rtmpSave_f()
 			  {
 				 LOG(ERROR) << "写入tag长度失败共:  "<< tagdataSize<<"字节未写入 直播ID:"<<m_recordID;   
 			  }
-		 }else
-		 {
+		  }else
+		  {
 			 LOG(ERROR) << "解析tag数据失败共:  "<< tagdataSize<<"字节未写入 直播ID:"<<m_recordID; 
-		 }		  
+		  }		  
 		/*   m_ret =  WriteFile(tagHead_buf, tagData_buf, tagdataSize);
 				
 	      if(m_ret != 0)

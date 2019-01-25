@@ -17,6 +17,7 @@
 #include <stdint.h>
 #include <sys/time.h>
 #include <time.h>
+#include "glog/logging.h"
 
 #define BUFFER_SIZE 1024*1024*10  //环形缓冲区内存大小
 
