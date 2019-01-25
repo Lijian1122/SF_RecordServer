@@ -616,9 +616,9 @@ void *RecordSaveRunnable::rtmpSave_f()
 		      
 		    if(0 != m_ret) //未读取到Tag头
 		    {
-			   if(0 == runningp && 2 == m_ret) //读线程已经结束，写缓存为空
+			   if(0 == runningp) //读线程已经结束，剩余数据不足一个Tag头
 			   {
-				  LOG(INFO) << "写缓存结束，缓冲区数据为空, 直播ID: "<<m_recordID;				  
+				  LOG(INFO) << "写缓存结束  直播ID: "<<m_recordID;				  
 				  break;		  
 			   }
 			   continue;	  
@@ -656,9 +656,9 @@ void *RecordSaveRunnable::rtmpSave_f()
 		   
 		   if(0 != m_ret) //未读取到Tag数据
 		   {
-			  if(0 == runningp && 2 == m_ret) //读线程已经结束，写缓存为空
+			  if(0 == runningp) //读线程已经结束,剩余数据不足一个TagData
 			  {
-				  LOG(INFO) << "写缓存结束，缓冲区数据为空, 直播ID: "<<m_recordID;				  
+				  LOG(INFO) << "写缓存结束  直播ID: "<<m_recordID;				  
 				  break;		  
 			  }
 			  continue;
@@ -670,7 +670,7 @@ void *RecordSaveRunnable::rtmpSave_f()
   
 		  if(readTagSize == 11 + tagdataSize)
 	      {
-			  m_ret =  WriteFile(tagHead_buf, tagData_buf, tagdataSize);
+			  m_ret = WriteFile(tagHead_buf, tagData_buf, tagdataSize);
 			  if(m_ret != 0)
 			  {
 				 LOG(ERROR) << "写入tag长度失败共:  "<< tagdataSize<<"字节未写入 直播ID:"<<m_recordID;   
