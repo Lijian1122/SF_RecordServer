@@ -40,6 +40,7 @@ int httpGetfun(int res)
    if(main_ret != 0)
    {   
        LOG(ERROR) << "注册录制服务离线失败 错误代号:"<<main_ret;
+       //curl_free(format);
        return main_ret;
 
    }else
@@ -56,10 +57,14 @@ int httpGetfun(int res)
              
              LOG(ERROR)<< "注册录制服务离线失败 main_ret: "<<main_ret;
              LOG(ERROR)<< "message: "<<message;
+             //curl_free(format);
              return main_ret ;
          }
       }
    }
+
+   //curl_free(format);
+
    return 0;
 }
  
@@ -93,7 +98,7 @@ int main(int argc, char **argv)
         strncpy(child_argv[i-1], argv[i], strlen(argv[i]));   
     }
 
-int execTime = 0;
+	  int execTime = 0;
     while(1)
     {
 

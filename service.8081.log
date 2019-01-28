@@ -1,0 +1,155 @@
+Could not create log file: File exists
+COULD NOT CREATE LOGFILE '20190126-190508.log'!
+E0126 19:05:08.413651 18329 monitor.c:123] serverName:recordServer
+record_Server :[tid: 18329]
+http://192.168.1.205:8080/live/server_create/live/server_delete/live/server_select/live/live_update
+E0126 19:05:08.494302 18329 webserver.c:300] 接口返回数据异常 ret:-1  错误信息:
+### Error updating database.  Cause: java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'LIVE录像01-192.168.1.206:8081/live/record' for key 'IDX_server_info_np'
+### The error may involve com.dbr.eduLive.Dao.ServiceDao.serverInsert-Inline
+### The error occurred while setting parameters
+### SQL: insert into server_info    (      netFlag    ,     serverType    ,     serverName    ,     serverApi    )    values    (      ?    ,     ?    ,     ?    ,     ?    )
+### Cause: java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'LIVE录像01-192.168.1.206:8081/live/record' for key 'IDX_server_info_np'
+; SQL []; Duplicate entry 'LIVE录像01-192.168.1.206:8081/live/record' for key 'IDX_server_info_np'; nested exception is java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'LIVE录像01-192.168.1.206:8081/live/record' for key 'IDX_server_info_np'
+E0126 19:05:08.494794 18329 webserver.c:537] 解析注册录制 数据失败 main_ret:-1
+httpServer_fun :[tid: 18331]
+server starting
+time url:http://192.168.1.205:8080serverId=&netFlag=20
+E0126 19:06:17.150493 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003
+E0126 19:06:21.277397 18330 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0126 19:06:21.277573 18330 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0126 19:06:21.277650 18330 webserver.c:169] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+E0126 19:11:32.917258 18330 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0126 19:11:32.917435 18330 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0126 19:11:32.917520 18330 webserver.c:169] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+E0126 19:11:41.110430 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003
+E0126 19:46:24.239753 18330 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0126 19:46:24.239923 18330 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0126 19:46:24.239991 18330 webserver.c:169] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+E0126 19:47:57.543401 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003
+启动Http服务 port:8081
+url参数长度：34  liveId=FreeManCamera2018003&type=1
+url参数长度：34  liveId=FreeManCamera2018003&type=0
+url参数长度：34  liveId=FreeManCamera2018003&type=0
+url参数长度：34  liveId=FreeManCamera2018003&type=1
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890011648,  free=31366MB
+url参数长度：34  liveId=FreeManCamera2018003&type=0
+url参数长度：34  liveId=FreeManCamera2018003&type=1
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890068992,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32889810944,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32889843712,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890064896,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32889827328,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890023936,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890003456,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32889982976,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890093568,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890368000,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890105856,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890327040,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890306560,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890286080,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890257408,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890241024,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890982400,  free=31367MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890961920,  free=31367MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890941440,  free=31367MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890920960,  free=31367MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890900480,  free=31367MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890884096,  free=31367MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890851328,  free=31367MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890834944,  free=31367MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890814464,  free=31367MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890793984,  free=31367MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890748928,  free=31367MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890748928,  free=31367MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890834944,  free=31367MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890810368,  free=31367MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890789888,  free=31367MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890769408,  free=31367MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890748928,  free=31367MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890728448,  free=31367MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890712064,  free=31367MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890691584,  free=31367MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890662912,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890646528,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890626048,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890605568,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890580992,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890564608,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890540032,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890519552,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890499072,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890474496,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890458112,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32889901056,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32889921536,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32889896960,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890372096,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890355712,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890331136,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890294272,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32889790464,  free=31366MB
+current dir:/recordServer/SF_RecordServer
+/recordServer/SF_RecordServer: total=53660876800 total=51175MB,free=32890269696,  free=31366MB
+current dir:/rE0128 09:38:09.192481 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003
+E0128 09:55:11.225992 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003
+E0128 09:55:11.988332 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003
+E0128 09:55:12.632969 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003
+E0128 09:55:13.111040 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003
+E0128 09:55:13.543257 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003

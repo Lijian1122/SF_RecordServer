@@ -112,12 +112,12 @@ int RecordSaveRunnable::StartRecord()
          {
             LOG(ERROR) << "获取直播信息失败   ret:"<<m_ret<<" 直播ID:"<<m_recordID;
             m_ret = 1;
-            //return m_ret;
+            return m_ret;
          }
       }else
       {              
          LOG(ERROR) << "调用直播信息查询接口失败:"<<m_ret<<" 直播ID:"<<m_recordID;
-         //return m_ret;
+         return m_ret;
       }
 
 	  //新建文件,同时把直播信息写入json文件
@@ -383,8 +383,8 @@ void *RecordSaveRunnable::rtmpRecive_f()
     double duration = 0.0;
     uint32_t bufferTime = (uint32_t)(duration * 1000.0) + 5000; 
 
-    // m_pullUrl.append(m_recordID);
-    m_pullUrl = "rtmp://www.bj-mobiletv.com:8000/live/FreeManCamera2018003";
+    m_pullUrl.append(m_recordID);
+   //m_pullUrl = "rtmp://www.bj-mobiletv.com:8000/live/FreeManCamera2018003";
 
     recive_httpflag = 1;
     int m_ret = UpdataRecordflag(recive_http,recive_httpflag);

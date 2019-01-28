@@ -1,0 +1,29 @@
+Log file created at: 2019/01/26 19:05:08
+Running on machine: live2.sanhai
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+E0126 19:05:08.494302 18329 webserver.c:300] 接口返回数据异常 ret:-1  错误信息:
+### Error updating database.  Cause: java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'LIVE录像01-192.168.1.206:8081/live/record' for key 'IDX_server_info_np'
+### The error may involve com.dbr.eduLive.Dao.ServiceDao.serverInsert-Inline
+### The error occurred while setting parameters
+### SQL: insert into server_info    (      netFlag    ,     serverType    ,     serverName    ,     serverApi    )    values    (      ?    ,     ?    ,     ?    ,     ?    )
+### Cause: java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'LIVE录像01-192.168.1.206:8081/live/record' for key 'IDX_server_info_np'
+; SQL []; Duplicate entry 'LIVE录像01-192.168.1.206:8081/live/record' for key 'IDX_server_info_np'; nested exception is java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'LIVE录像01-192.168.1.206:8081/live/record' for key 'IDX_server_info_np'
+E0126 19:05:08.494794 18329 webserver.c:537] 解析注册录制 数据失败 main_ret:-1
+E0126 19:06:17.150493 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003
+E0126 19:06:21.277397 18330 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0126 19:06:21.277573 18330 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0126 19:06:21.277650 18330 webserver.c:169] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+E0126 19:11:32.917258 18330 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0126 19:11:32.917435 18330 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0126 19:11:32.917520 18330 webserver.c:169] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+E0126 19:11:41.110430 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003
+E0126 19:46:24.239753 18330 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0126 19:46:24.239923 18330 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0126 19:46:24.239991 18330 webserver.c:169] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+E0126 19:47:57.543401 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003
+E0128 09:38:09.192481 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003
+E0128 09:55:11.225992 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003
+E0128 09:55:11.988332 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003
+E0128 09:55:12.632969 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003
+E0128 09:55:13.111040 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003
+E0128 09:55:13.543257 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003

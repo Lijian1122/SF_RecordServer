@@ -1,0 +1,5 @@
+Log file created at: 2019/01/26 19:05:08
+Running on machine: live2.sanhai
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I0126 19:05:08.335784 18329 monitor.c:111] pid :0
+E0126 19:05:08.413651 18329 monitor.c:123] serverName:recordServer

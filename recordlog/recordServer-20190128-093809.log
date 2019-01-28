@@ -1,0 +1,43 @@
+Log file created at: 2019/01/28 09:38:09
+Running on machine: live2.sanhai
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I0128 09:38:09.190196 18331 webserver.c:38] Connection from:0x7f16b8000a40192.168.8.39:3497
+I0128 09:38:09.190974 18331 webserver.c:38] Connection from:0x7f16b8000b20192.168.8.39:3498
+I0128 09:38:09.192167 18331 webserver.c:56] 开始解析:/live/record
+I0128 09:38:09.192296 18331 webserver.c:86] 获取参数 : FreeManCamera2018003  1
+I0128 09:38:09.192402 18330 webserver.c:152] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:1
+E0128 09:38:09.192481 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003
+I0128 09:38:10.193789 18331 webserver.c:131] Connection closed:0x7f16b8000a40
+I0128 09:38:11.200981 18331 webserver.c:131] Connection closed:0x7f16b8000b20
+I0128 09:55:11.224309 18331 webserver.c:38] Connection from:0x7f16b8001190192.168.8.39:4280
+I0128 09:55:11.225132 18331 webserver.c:38] Connection from:0x7f16b8000aa0192.168.8.39:4281
+I0128 09:55:11.225697 18331 webserver.c:56] 开始解析:/live/record
+I0128 09:55:11.225806 18331 webserver.c:86] 获取参数 : FreeManCamera2018003  1
+I0128 09:55:11.225914 18330 webserver.c:152] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:1
+E0128 09:55:11.225992 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003
+I0128 09:55:11.988029 18331 webserver.c:56] 开始解析:/live/record
+I0128 09:55:11.988139 18331 webserver.c:86] 获取参数 : FreeManCamera2018003  1
+I0128 09:55:11.988245 18330 webserver.c:152] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:1
+I0128 09:55:11.988318 18331 webserver.c:131] Connection closed:0x7f16b8001190
+E0128 09:55:11.988332 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003
+I0128 09:55:12.631575 18331 webserver.c:131] Connection closed:0x7f16b8000aa0
+I0128 09:55:12.631722 18331 webserver.c:38] Connection from:0x7f16b8000a60192.168.8.39:4282
+I0128 09:55:12.632696 18331 webserver.c:56] 开始解析:/live/record
+I0128 09:55:12.632791 18331 webserver.c:86] 获取参数 : FreeManCamera2018003  1
+I0128 09:55:12.632890 18330 webserver.c:152] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:1
+E0128 09:55:12.632969 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003
+I0128 09:55:13.109536 18331 webserver.c:131] Connection closed:0x7f16b8000a60
+I0128 09:55:13.109684 18331 webserver.c:38] Connection from:0x7f16b8000a60192.168.8.39:4283
+I0128 09:55:13.110731 18331 webserver.c:56] 开始解析:/live/record
+I0128 09:55:13.110854 18331 webserver.c:86] 获取参数 : FreeManCamera2018003  1
+I0128 09:55:13.110965 18330 webserver.c:152] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:1
+E0128 09:55:13.111040 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003
+I0128 09:55:13.541988 18331 webserver.c:131] Connection closed:0x7f16b8000a60
+I0128 09:55:13.542136 18331 webserver.c:38] Connection from:0x7f16b8000a60192.168.8.39:4284
+I0128 09:55:13.542922 18331 webserver.c:56] 开始解析:/live/record
+I0128 09:55:13.543042 18331 webserver.c:86] 获取参数 : FreeManCamera2018003  1
+I0128 09:55:13.543150 18330 webserver.c:152] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:1
+E0128 09:55:13.543257 18330 webserver.c:193] 未找到该录制任务  直播ID:FreeManCamera2018003
+I0128 09:55:14.544320 18331 webserver.c:131] Connection closed:0x7f16b8000a60
+I0128 09:55:14.549880 18331 webserver.c:38] Connection from:0x7f16b8000a60192.168.8.39:4285
+I0128 09:55:15.552100 18331 webserver.c:131] Connection closed:0x7f16b8000a60

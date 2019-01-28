@@ -86,7 +86,7 @@ int CCycleBuffer::write(char* buf,int count)
 } 
 	
 /*******从缓冲区读数据*******/
-int CCycleBuffer::read(char* buf,int count,bool stop) 
+int CCycleBuffer::read(char* buf,int count) 
 { 
 
 	/*resCode 返回值 
