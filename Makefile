@@ -31,7 +31,7 @@ $(BASE): FORCE
 	@cd Base; $(MAKE) all
 
 $(RECORDSAVE): FORCE
-	#@cd RecordSave; $(MAKE) all
+	@cd RecordSave; $(MAKE) all
 
 $(MONITOR) : $(MOBJS)
 	$(CC) $(CPPFLAGS) -o $@ $(MOBJS) $(OPEN_LIB)

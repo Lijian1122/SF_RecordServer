@@ -1,0 +1,227 @@
+Log file created at: 2019/01/29 18:39:24
+Running on machine: live2.sanhai
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+E0129 18:39:24.984338  5224 webserver.cpp:275] 接口返回数据异常 ret:-1  错误信息:
+### Error updating database.  Cause: java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'LIVE录像01-192.168.1.206:8081/live/record' for key 'IDX_server_info_np'
+### The error may involve com.dbr.eduLive.Dao.ServiceDao.serverInsert-Inline
+### The error occurred while setting parameters
+### SQL: insert into server_info    (      netFlag    ,     serverType    ,     serverName    ,     serverApi    )    values    (      ?    ,     ?    ,     ?    ,     ?    )
+### Cause: java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'LIVE录像01-192.168.1.206:8081/live/record' for key 'IDX_server_info_np'
+; SQL []; Duplicate entry 'LIVE录像01-192.168.1.206:8081/live/record' for key 'IDX_server_info_np'; nested exception is java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'LIVE录像01-192.168.1.206:8081/live/record' for key 'IDX_server_info_np'
+E0129 18:39:24.985792  5224 webserver.cpp:513] 解析注册录制 数据失败 main_ret:-1
+I0129 18:39:24.986357  5224 webserver.cpp:690] server start: main_ret:0
+I0129 18:39:24.986678  5226 webserver.cpp:405] Http服务启动  port:8081
+I0129 18:39:30.579073  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16215
+I0129 18:39:30.579988  5226 webserver.cpp:13] Connection from:0x7f5584000b80192.168.8.39:16216
+I0129 18:39:30.580732  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:30.580893  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  0
+I0129 18:39:30.581061  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:0
+I0129 18:39:30.581374  5225 RecordSaveRunnable.cpp:105] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=FreeManCamera2018003&userType=1  直播ID:FreeManCamera2018003
+E0129 18:39:30.594122  5225 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0129 18:39:30.594327  5225 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0129 18:39:30.594413  5225 webserver.cpp:144] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+I0129 18:39:31.582281  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:32.596186  5226 webserver.cpp:106] Connection closed:0x7f5584000b80
+I0129 18:39:34.226346  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16217
+I0129 18:39:34.227284  5226 webserver.cpp:13] Connection from:0x7f5584000b20192.168.8.39:16218
+I0129 18:39:34.228278  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:34.228384  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  0
+I0129 18:39:34.228523  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:0
+I0129 18:39:34.228682  5225 RecordSaveRunnable.cpp:105] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=FreeManCamera2018003&userType=1  直播ID:FreeManCamera2018003
+E0129 18:39:34.240927  5225 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0129 18:39:34.241111  5225 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0129 18:39:34.241186  5225 webserver.cpp:144] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+I0129 18:39:35.027024  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:35.027158  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  0
+I0129 18:39:35.027302  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:0
+I0129 18:39:35.027429  5225 RecordSaveRunnable.cpp:105] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=FreeManCamera2018003&userType=1  直播ID:FreeManCamera2018003
+I0129 18:39:35.027340  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+E0129 18:39:35.037725  5225 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0129 18:39:35.037922  5225 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0129 18:39:35.038002  5225 webserver.cpp:144] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+I0129 18:39:35.651384  5226 webserver.cpp:106] Connection closed:0x7f5584000b20
+I0129 18:39:35.651535  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16219
+I0129 18:39:35.652930  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:35.653074  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  0
+I0129 18:39:35.653225  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:0
+I0129 18:39:35.653342  5225 RecordSaveRunnable.cpp:105] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=FreeManCamera2018003&userType=1  直播ID:FreeManCamera2018003
+E0129 18:39:35.663974  5225 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0129 18:39:35.664151  5225 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0129 18:39:35.664249  5225 webserver.cpp:144] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+I0129 18:39:36.224541  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:36.224691  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16220
+I0129 18:39:36.225865  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:36.226008  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  0
+I0129 18:39:36.226145  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:0
+I0129 18:39:36.226280  5225 RecordSaveRunnable.cpp:105] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=FreeManCamera2018003&userType=1  直播ID:FreeManCamera2018003
+E0129 18:39:36.236318  5225 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0129 18:39:36.236517  5225 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0129 18:39:36.236613  5225 webserver.cpp:144] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+I0129 18:39:36.732298  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:36.732450  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16221
+I0129 18:39:36.733238  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:36.733352  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  0
+I0129 18:39:36.733479  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:0
+I0129 18:39:36.733593  5225 RecordSaveRunnable.cpp:105] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=FreeManCamera2018003&userType=1  直播ID:FreeManCamera2018003
+E0129 18:39:36.742074  5225 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0129 18:39:36.742288  5225 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0129 18:39:36.742384  5225 webserver.cpp:144] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+I0129 18:39:37.219719  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:37.219871  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16222
+I0129 18:39:37.220844  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:37.220958  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  0
+I0129 18:39:37.221094  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:0
+I0129 18:39:37.221231  5225 RecordSaveRunnable.cpp:105] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=FreeManCamera2018003&userType=1  直播ID:FreeManCamera2018003
+E0129 18:39:37.232033  5225 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0129 18:39:37.232270  5225 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0129 18:39:37.232393  5225 webserver.cpp:144] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+I0129 18:39:37.682721  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:37.682871  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16223
+I0129 18:39:37.683722  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:37.683838  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  0
+I0129 18:39:37.683975  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:0
+I0129 18:39:37.684089  5225 RecordSaveRunnable.cpp:105] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=FreeManCamera2018003&userType=1  直播ID:FreeManCamera2018003
+E0129 18:39:37.695106  5225 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0129 18:39:37.695324  5225 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0129 18:39:37.695422  5225 webserver.cpp:144] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+I0129 18:39:38.139256  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:38.139407  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16224
+I0129 18:39:38.140228  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:38.140347  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  0
+I0129 18:39:38.140481  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:0
+I0129 18:39:38.140595  5225 RecordSaveRunnable.cpp:105] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=FreeManCamera2018003&userType=1  直播ID:FreeManCamera2018003
+E0129 18:39:38.151464  5225 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0129 18:39:38.151661  5225 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0129 18:39:38.151757  5225 webserver.cpp:144] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+I0129 18:39:38.628044  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:38.628195  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16225
+I0129 18:39:38.628986  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:38.629103  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  0
+I0129 18:39:38.629199  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:0
+I0129 18:39:38.629331  5225 RecordSaveRunnable.cpp:105] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=FreeManCamera2018003&userType=1  直播ID:FreeManCamera2018003
+E0129 18:39:38.639796  5225 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0129 18:39:38.639974  5225 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0129 18:39:38.640053  5225 webserver.cpp:144] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+I0129 18:39:39.091781  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:39.091931  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16226
+I0129 18:39:39.092864  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:39.092979  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  0
+I0129 18:39:39.093118  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:0
+I0129 18:39:39.093256  5225 RecordSaveRunnable.cpp:105] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=FreeManCamera2018003&userType=1  直播ID:FreeManCamera2018003
+E0129 18:39:39.104480  5225 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0129 18:39:39.104656  5225 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0129 18:39:39.104753  5225 webserver.cpp:144] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+I0129 18:39:39.574182  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:39.574349  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16227
+I0129 18:39:39.575158  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:39.575285  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  0
+I0129 18:39:39.575419  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:0
+I0129 18:39:39.575532  5225 RecordSaveRunnable.cpp:105] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=FreeManCamera2018003&userType=1  直播ID:FreeManCamera2018003
+E0129 18:39:39.583948  5225 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0129 18:39:39.584147  5225 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0129 18:39:39.584265  5225 webserver.cpp:144] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+I0129 18:39:39.994632  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:39.994781  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16228
+I0129 18:39:39.995941  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:39.996073  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  0
+I0129 18:39:39.996230  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:0
+I0129 18:39:39.996348  5225 RecordSaveRunnable.cpp:105] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=FreeManCamera2018003&userType=1  直播ID:FreeManCamera2018003
+E0129 18:39:40.005019  5225 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0129 18:39:40.005228  5225 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0129 18:39:40.005342  5225 webserver.cpp:144] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+I0129 18:39:40.459131  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:40.459312  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16229
+I0129 18:39:40.460296  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:40.460412  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  0
+I0129 18:39:40.460548  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:0
+I0129 18:39:40.460662  5225 RecordSaveRunnable.cpp:105] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=FreeManCamera2018003&userType=1  直播ID:FreeManCamera2018003
+E0129 18:39:40.470937  5225 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0129 18:39:40.471117  5225 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0129 18:39:40.471194  5225 webserver.cpp:144] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+I0129 18:39:40.888300  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:40.888450  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16231
+I0129 18:39:40.889727  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:40.889861  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  0
+I0129 18:39:40.890002  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:0
+I0129 18:39:40.890116  5225 RecordSaveRunnable.cpp:105] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=FreeManCamera2018003&userType=1  直播ID:FreeManCamera2018003
+E0129 18:39:40.900966  5225 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0129 18:39:40.901145  5225 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0129 18:39:40.901245  5225 webserver.cpp:144] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+I0129 18:39:41.300263  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:41.300415  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16232
+I0129 18:39:41.301159  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:41.301278  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  0
+I0129 18:39:41.301425  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:0
+I0129 18:39:41.301538  5225 RecordSaveRunnable.cpp:105] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=FreeManCamera2018003&userType=1  直播ID:FreeManCamera2018003
+E0129 18:39:41.310439  5225 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0129 18:39:41.310636  5225 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0129 18:39:41.310731  5225 webserver.cpp:144] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+I0129 18:39:41.730646  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:41.730795  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16233
+I0129 18:39:41.731719  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:41.731863  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  0
+I0129 18:39:41.732004  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:0
+I0129 18:39:41.732120  5225 RecordSaveRunnable.cpp:105] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=FreeManCamera2018003&userType=1  直播ID:FreeManCamera2018003
+E0129 18:39:41.742508  5225 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0129 18:39:41.742705  5225 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0129 18:39:41.742801  5225 webserver.cpp:144] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+I0129 18:39:42.207672  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:42.207823  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16234
+I0129 18:39:42.208640  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:42.208837  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  0
+I0129 18:39:42.208981  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:0
+I0129 18:39:42.209092  5225 RecordSaveRunnable.cpp:105] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=FreeManCamera2018003&userType=1  直播ID:FreeManCamera2018003
+E0129 18:39:42.218444  5225 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0129 18:39:42.218639  5225 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0129 18:39:42.218734  5225 webserver.cpp:144] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+I0129 18:39:42.635823  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:42.635974  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16235
+I0129 18:39:42.636984  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:42.637148  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  0
+I0129 18:39:42.637302  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:0
+I0129 18:39:42.637418  5225 RecordSaveRunnable.cpp:105] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=FreeManCamera2018003&userType=1  直播ID:FreeManCamera2018003
+E0129 18:39:42.647909  5225 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0129 18:39:42.648106  5225 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0129 18:39:42.648218  5225 webserver.cpp:144] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+I0129 18:39:43.018775  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:43.018944  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16240
+I0129 18:39:43.020190  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:43.020362  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  0
+I0129 18:39:43.020496  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:0
+I0129 18:39:43.020612  5225 RecordSaveRunnable.cpp:105] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=FreeManCamera2018003&userType=1  直播ID:FreeManCamera2018003
+E0129 18:39:43.030923  5225 RecordSaveRunnable.cpp:80]  Http接口返回异常  ret:8  resCodeInfo:not in db  直播ID:FreeManCamera2018003
+E0129 18:39:43.031122  5225 RecordSaveRunnable.cpp:113] 获取直播信息失败   ret:0 直播ID:FreeManCamera2018003
+E0129 18:39:43.031237  5225 webserver.cpp:144] 启动录制任务失败  ret:1   直播ID:FreeManCamera2018003
+I0129 18:39:44.021652  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:44.035420  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16242
+I0129 18:39:45.039358  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:46.646103  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16244
+I0129 18:39:46.647910  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:46.648042  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  1
+I0129 18:39:46.648254  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:1
+I0129 18:39:46.648289  5226 webserver.cpp:13] Connection from:0x7f5584001200192.168.8.39:16245
+E0129 18:39:46.648360  5225 webserver.cpp:168] 未找到该录制任务  直播ID:FreeManCamera2018003
+I0129 18:39:47.649695  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:48.656250  5226 webserver.cpp:106] Connection closed:0x7f5584001200
+I0129 18:39:49.100193  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16247
+I0129 18:39:49.101248  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:49.101336  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  1
+I0129 18:39:49.101444  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:1
+E0129 18:39:49.101531  5225 webserver.cpp:168] 未找到该录制任务  直播ID:FreeManCamera2018003
+I0129 18:39:49.103812  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:49.103924  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16248
+I0129 18:39:49.662240  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:49.662392  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16249
+I0129 18:39:49.663084  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:49.663156  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  1
+I0129 18:39:49.663286  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:1
+E0129 18:39:49.663374  5225 webserver.cpp:168] 未找到该录制任务  直播ID:FreeManCamera2018003
+I0129 18:39:50.179142  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:50.179322  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16250
+I0129 18:39:50.180199  5226 webserver.cpp:31] 开始解析:/live/record
+I0129 18:39:50.180330  5226 webserver.cpp:61] 获取参数 : FreeManCamera2018003  1
+I0129 18:39:50.180438  5225 webserver.cpp:127] 管理线程获取参数 直播ID:FreeManCamera2018003  Type:1
+E0129 18:39:50.180526  5225 webserver.cpp:168] 未找到该录制任务  直播ID:FreeManCamera2018003
+I0129 18:39:50.182673  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
+I0129 18:39:50.182785  5226 webserver.cpp:13] Connection from:0x7f5584000a40192.168.8.39:16251
+I0129 18:39:51.212363  5226 webserver.cpp:106] Connection closed:0x7f5584000a40
