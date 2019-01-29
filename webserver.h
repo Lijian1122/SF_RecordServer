@@ -14,73 +14,30 @@ v 0.0.3
 2019.01.18 将录制任务删除定时器机制改为事件机制，用线程同步来实现即时删除录制任务任务
 2019.01.25 将任务对象存储数据结构改为list，将list的出队入队操作封装为一个类
 ******************************************************/
-
-#include <string.h>
-#include <stdlib.h> 
-#include <dlfcn.h>
-#include <pthread.h>
-#include <semaphore.h>
+#include <sys/vfs.h> 
 #include <unistd.h>
-#include <sched.h>
-#include <iostream>
-#include <algorithm>
-#include <termio.h>
-#include <malloc.h>
-
-#include <sys/select.h>
-#include <stdint.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/wait.h>
-#include <sys/types.h>
-#include <sys/vfs.h>
 #include <sys/syscall.h>
-#include <errno.h>
-#include <sys/stat.h> 
+#include <sys/types.h>
 
-#include <signal.h>
+#include "Base/common.h"
+#include "mongoose.h"
+#include "glog/logging.h"
+#include "Base/base.h"
+#include "RecordSave/RecordSaveRunnable.h"
 
-#define CONTENTTYPE "Content-Type: application/x-www-form-urlencoded\r\n"  
+extern const char *s_http_port;
+extern string FILEFOLDER,IpPort,record_serverId,ServerCreate,ServerDelete,ServerSelect,ServerUpdate,liveUpdate,liveSelect,liveUpload;
 
-#define IPPORT "http://192.168.1.205:8080/live/"
+int httpSev_flag = 1; //http服务线程退出标志
+int recordMange_flag = 1; //任务管理线程退出标志
+int record_flag = 1; //录制服务在线状态上传标志
 
-#define HTON16(x)  ((x>>8&0xff)|(x<<8&0xff00))
-#define HTON24(x)  ((x>>16&0xff)|(x<<16&0xff0000)|x&0xff00)
-#define HTON32(x)  ((x>>24&0xff)|(x>>8&0xff00)| (x << 8 & 0xff0000) | (x << 24 & 0xff000000))
-
-#define UN_ABS(a,b) (a>=b?a-b:b-a)
-
-#define FILEFOLDER "./recordFile/"
-
-#define APIStr "/live/record"
-
-static const char *s_http_port = "8081";
-
-static int httpSev_flag = 1; //http服务线程退出标志
-
-static int recordMange_flag = 1; //任务管理线程退出标志
-
-static int record_flag = 1; //录制服务在线状态上传标志
-
-string record_serverId;  //录制服务ID
+string APIStr="/live/record";
+string IPPORT="http://192.168.1.205:8080/live/";
 
 string updateOnlineUrl;  //更新录制在线Url
-
-string  LOGFOLDER =  "./recordlog/";
-
-string  serverName = "LIVE录像01";
-
-string IpPort = "http://";
-
-//Http API方法名
-string ServerCreate;
-string ServerDelete;
-string ServerSelect;
-string ServerUpdate;
-
-string liveUpdate;
-string liveSelect;
-string liveUpload;
+string LOGFOLDER =  "./recordlog/";
+string serverName = "LIVE录像01";
 
 //Http服务返回值枚举
 enum RESCODE{ 
@@ -110,5 +67,60 @@ typedef struct liveParmStruct
    char *liveID;
    char *liveType;
 }liveParmStruct;
+
+//直播参数队列  直播对象队列 删除对象队列
+CommonList *LiveParmList, *RecordSaveList, *DeleteRecordList;
+
+//线程对象
+pthread_t recordManage_t;
+pthread_t httpServer_t;
+pthread_t httpTime_t;
+pthread_t checkDisk_t;
+pthread_t deletRecordTask_t;
+
+//Http请求对象
+LibcurClient *m_httpclient, *s_httpclient;
+
+
+//处理Http请求
+void ev_handler(struct mg_connection *nc, int ev, void *ev_data);
+
+//处理录制参数线程
+void *recordManage_fun(void *data);
+
+//停止录制任务 线程
+void *stopRecord_fun(void *data);
+
+//解析Http返回json数据
+int parseResdata(string &resdata,PARSE_TYPE m_Type);
+
+//设置定时器任务
+void setTimer(unsigned seconds ,TIMER_TYPE TimerFlag);
+
+//定时检测磁盘 线程
+void *checkDisk_fun(void *data);
+
+//定时上传录制在线 线程
+void *httpTime_fun(void *pdata);
+
+//上传录制在线
+void updateOnline_fun();
+
+//检测磁盘空间
+void checkdisk_fun();
+
+//http服务监听 线程
+void *httpServer_fun(void *pdata);
+
+//创建日志文件夹
+int CreateLogFileDir(const char *sPathName);
+
+//启动服务
+int startServer(void);
+
+//停止服务
+int stopServer(void);
+
+
 
 

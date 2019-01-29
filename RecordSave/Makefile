@@ -50,11 +50,11 @@ THREADLIB=$(THREADLIB_$(SYS))
 SLIBS=$(THREADLIB) $(LIBS)
 
 LIBRTMP=librtmp/librtmp.a
-INCRTMP=librtmp/rtmp_sys.h librtmp/rtmp.h librtmp/log.h librtmp/amf.h ../Base/LibcurClient.h CCycleBuffer.h
+INCRTMP=librtmp/rtmp_sys.h librtmp/rtmp.h librtmp/log.h librtmp/amf.h ../Base/LibcurClient.h  CCycleBuffer.h
 
 
 PROGS= libRecordSave.so
-OBJS = CCycleBuffer.o RecordSaveRunnable.o
+OBJS = CCycleBuffer.o  RecordSaveRunnable.o
    
 all:	$(LIBRTMP) $(PROGS)
 
@@ -83,3 +83,4 @@ $(PROGS): $(OBJS)
 #Makefile
 RecordRunnable.o: RecordSaveRunnable.cpp $(INCRTMP) RecordSaveRunnable.h   
 CCycleBuffer.o: CCycleBuffer.cpp $(INCRTMP) CCycleBuffer.h
+#common.o: common.cpp  common.h

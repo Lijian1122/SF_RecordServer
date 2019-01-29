@@ -16,9 +16,20 @@ V0.0.2
 #ifndef RECORDSAVERUNNABLE_H
 #define RECORDSAVERUNNABLE_H
 
+#include <sys/types.h> 
+#include <sys/stat.h>  
+#include "../Base/common.h"
 #include "../Base/base.h"
 #include "glog/logging.h"
 #include "CCycleBuffer.h"
+ 
+#define HTON16(x)  ((x>>8&0xff)|(x<<8&0xff00))
+#define HTON24(x)  ((x>>16&0xff)|(x<<16&0xff0000)|x&0xff00)
+#define HTON32(x)  ((x>>24&0xff)|(x>>8&0xff00)| (x << 8 & 0xff0000) | (x << 24 & 0xff000000))
+#define UN_ABS(a,b) (a>=b?a-b:b-a)
+
+extern const char *s_http_port;
+extern string FILEFOLDER,IpPort,record_serverId,ServerCreate,ServerDelete,ServerSelect,ServerUpdate,liveUpdate,liveSelect,liveUpload;
 
 using json = nlohmann::json;
 
@@ -26,7 +37,6 @@ extern "C"
 {
   #include "librtmp/rtmp_sys.h"
   #include "librtmp/log.h"
-  #include "../webserver.h"
 }
 
 typedef struct AdtsHeader
@@ -69,6 +79,7 @@ enum URL_TYPE{
    UPDATA_RECORDFLAG
 };
 
+using namespace std;
 class RecordSaveRunnable
 {
 	

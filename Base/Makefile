@@ -9,7 +9,7 @@ SHARE := -shared
 
 OPEN_LIB = -lpthread  -lcurl
 
-OBJS = LibcurClient.o CommonList.o MessageQueue.o 
+OBJS =common.o  LibcurClient.o CommonList.o MessageQueue.o 
 LIB = libbase.so 
 
 all : $(LIB)
@@ -25,6 +25,7 @@ $(LIB) : $(OBJS)
 clean:
 	rm -f $(OBJS) $(LIB)
 
+common.o:common.cpp common.h
 LibcurClient.o: LibcurClient.cpp LibcurClient.h
 CommonList.o: CommonList.cpp  CommonList.h
 MessageQueue.o: MessageQueue.c MessageQueue.h

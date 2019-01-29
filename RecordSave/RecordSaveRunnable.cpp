@@ -233,7 +233,7 @@ int RecordSaveRunnable::CreateFile(std::string &resData)
      //file dir
      char fileDir[1024] = {0};  
  
-     sprintf(fileDir ,"%s%s%s",FILEFOLDER, m_recordID.c_str(),"/");
+     sprintf(fileDir ,"%s%s%s",FILEFOLDER.c_str(), m_recordID.c_str(),"/");
 
      ret = CreateFileDir(fileDir);
      if(0 != ret)
