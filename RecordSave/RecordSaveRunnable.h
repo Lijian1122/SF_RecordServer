@@ -16,8 +16,7 @@ V0.0.2
 #ifndef RECORDSAVERUNNABLE_H
 #define RECORDSAVERUNNABLE_H
 
-#include "../Httpclient/LibcurClient.h"
-#include "../json.hpp"
+#include "../Base/base.h"
 #include "glog/logging.h"
 #include "CCycleBuffer.h"
 

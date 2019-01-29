@@ -7,16 +7,13 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "Httpclient/LibcurClient.h"
-#include "message_queue.h"
+#include "Base/base.h"
 
 #include "glog/logging.h"
  
 #define LOG_FILE "recordmonitor."
 
 #define IPPORT "http://192.168.1.205:8080/live/"
-
-#include "json.hpp"
 
 using json = nlohmann::json;
 

@@ -1,10 +1,7 @@
 #include "mongoose.h"
 #include "glog/logging.h"
-#include "Httpclient/LibcurClient.h"
+#include "Base/base.h"
 #include "RecordSave/RecordSaveRunnable.h"
-#include "Common/CommonList.h"
-#include "message_queue.h"
-#include "json.hpp"
 
 using json = nlohmann::json;
 

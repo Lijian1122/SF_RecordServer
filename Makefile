@@ -1,4 +1,4 @@
-VERSION=v1.0
+VERSION=v2.0
 
 prefix=/usr/local
 
@@ -10,13 +10,11 @@ bindir=$(prefix)/bin
 
 BINDIR=$(DESTDIR)$(bindir)
 
-HTTPCLIENT= Httpclient/libcurClient.so
-RECORDSAVE= RecordSave/RecordSave.so
-COMMON= Common/libbase.so
+RECORDSAVE= RecordSave/libRecordSave.so
+BASE= Base/libbase.so
 
-INCRTMP= RecordSave/RecordSaveRunnable.h  Httpclient/LibcurClient.h
-OPEN_LIB = -lmsgqueue -lcurl -lcurClient -lRecordSave -lglog -lpthread -lbase
-
+INCRTMP= RecordSave/RecordSaveRunnable.h  Base/base.h
+OPEN_LIB = -lcurl -lRecordSave -lglog -lpthread -lbase
 
 MONITOR = recordMonitor
 SERVER = recordServer
@@ -30,20 +28,16 @@ all : $(HTTPCLIENT) $(RECORDSAVE) $(COMMON) $(TARGET)
 
 install:	$(TARGET)
 	cp $(TARGET) $(BINDIR)
-	@cd Httpclient; $(MAKE) install
+	@cd Base; $(MAKE) install
 	@cd RecordSave; $(MAKE) install
-	@cd Common; $(MAKE) install
 
 FORCE:
 
-$(HTTPCLIENT): FORCE
-	@cd Httpclient; $(MAKE) all
+$(BASE): FORCE
+	@cd Base; $(MAKE) all
 
 $(RECORDSAVE): FORCE
 	@cd RecordSave; $(MAKE) all
-
-$(COMMON): FORCE
-	@cd Common; $(MAKE) all
 
 $(MONITOR) : $(MOBJS)
 	$(CC) $(CFLAGS) $(SHARE) -o $@ $(MOBJS) $(OPEN_LIB)
@@ -53,9 +47,8 @@ $(SERVER) : $(OBJS)
 
 clean:
 	rm -f $(OBJS) $(MOBJS) $(TARGET)
-	@cd Httpclient; $(MAKE) clean
+	@cd Base; $(MAKE) clean
 	@cd RecordSave; $(MAKE) clean
-	@cd Common; $(MAKE) clean
 
 webserver.o: webserver.c webserver.h
 mongoose.o: mongoose.c mongoose.h

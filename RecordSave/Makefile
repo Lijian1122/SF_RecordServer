@@ -50,7 +50,7 @@ THREADLIB=$(THREADLIB_$(SYS))
 SLIBS=$(THREADLIB) $(LIBS)
 
 LIBRTMP=librtmp/librtmp.a
-INCRTMP=librtmp/rtmp_sys.h librtmp/rtmp.h librtmp/log.h librtmp/amf.h ../Httpclient/LibcurClient.h CCycleBuffer.h
+INCRTMP=librtmp/rtmp_sys.h librtmp/rtmp.h librtmp/log.h librtmp/amf.h ../Base/LibcurClient.h CCycleBuffer.h
 
 
 PROGS= libRecordSave.so
