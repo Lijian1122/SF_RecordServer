@@ -158,9 +158,13 @@ void *recordManage_fun(void *data)
 			 void *recordData = RecordSaveList->findList((void*)pdata->liveID);
 			 if(NULL != recordData)//在录制对象队列中找到找到liveID
 			 {	
+                 //停止录制任务		 
+			     RecordSaveRunnable *m_runnable = (RecordSaveRunnable*)recordData;
+				 m_runnable->SetStopFlag();
+				 
                  //录制对象出队列	 
 				 RecordSaveList->popList(recordData);
-				 
+				 		 
 				 //删除任务入队列
                  DeleteRecordList->pushLockList(recordData);				 
 			 }else

@@ -91,7 +91,10 @@ public:
     //启动录制任务
     int StartRecord(); 
     
-	//停止录制任务
+	//设置停止录制flag
+	void SetStopFlag(){runningp = 0;};
+	
+	//停止录制,等待读写线程退出
     int StopRecord();
 	
     //获取直播ID

@@ -136,7 +136,7 @@ int RecordSaveRunnable::StartRecord()
          return ret;
       }
 
-      ret =  pthread_create(&consumer_t, NULL, Save_fun,  (void *)this);
+      ret = pthread_create(&consumer_t, NULL, Save_fun,  (void *)this);
       if(0 != ret)
       {
       	  runningp = 0;
@@ -153,7 +153,7 @@ int RecordSaveRunnable::StartRecord()
 //结束录制任务
 int RecordSaveRunnable::StopRecord()
 {
-      runningp = 0;
+      //runningp = 0;
 
       int resCode = pthread_join(producter_t,NULL);
 

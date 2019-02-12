@@ -122,7 +122,7 @@ int CCycleBuffer::read(char* buf,int count)
 	}else
 	{
     
-          if(m_usedSize  == 0) //缓冲区为空，等待非空信号
+         if(m_usedSize  == 0) //缓冲区为空，等待非空信号
 	     {
 		     struct timespec outtime;
              struct timeval now;
@@ -137,7 +137,7 @@ int CCycleBuffer::read(char* buf,int count)
 	    }else
 	    {    
 			resCode = 1;	 
-	     }  		
+	    }  		
 	}
  
     pthread_cond_signal(&notfull);		
