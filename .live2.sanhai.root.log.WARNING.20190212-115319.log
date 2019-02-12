@@ -1,0 +1,12 @@
+Log file created at: 2019/02/12 11:53:19
+Running on machine: live2.sanhai
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+E0212 11:53:19.220309 12768 webserver.cpp:275] 接口返回数据异常 ret:-1  错误信息:
+### Error updating database.  Cause: java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'LIVE录像01-192.168.1.206:8081/live/record' for key 'IDX_server_info_np'
+### The error may involve com.dbr.eduLive.Dao.ServiceDao.serverInsert-Inline
+### The error occurred while setting parameters
+### SQL: insert into server_info    (      netFlag    ,     serverType    ,     serverName    ,     serverApi    )    values    (      ?    ,     ?    ,     ?    ,     ?    )
+### Cause: java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'LIVE录像01-192.168.1.206:8081/live/record' for key 'IDX_server_info_np'
+; SQL []; Duplicate entry 'LIVE录像01-192.168.1.206:8081/live/record' for key 'IDX_server_info_np'; nested exception is java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'LIVE录像01-192.168.1.206:8081/live/record' for key 'IDX_server_info_np'
+E0212 11:53:19.221590 12768 webserver.cpp:513] 解析注册录制 数据失败 main_ret:-1
+E0212 11:53:19.222522 12770 webserver.cpp:410] Http服务 监听端口失败

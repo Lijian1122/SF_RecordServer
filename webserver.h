@@ -14,6 +14,9 @@ v 0.0.3
 2019.01.18 将录制任务删除定时器机制改为事件机制，用线程同步来实现即时删除录制任务任务
 2019.01.25 将任务对象存储数据结构改为list，将list的出队入队操作封装为一个类
 ******************************************************/
+#ifndef WEBSERVER_H
+#define WEBSERVER_H
+
 #include <sys/vfs.h> 
 #include <unistd.h>
 #include <sys/syscall.h>
@@ -121,6 +124,6 @@ int startServer(void);
 //停止服务
 int stopServer(void);
 
-
+#endif
 
 
