@@ -1,0 +1,25 @@
+Log file created at: 2019/05/23 18:32:03
+Running on machine: live2.sanhai
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+E0523 18:32:03.735816  8145 webserver.cpp:269] 接口返回数据异常 ret:-1  错误信息:
+### Error updating database.  Cause: java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'LIVE录像01-192.168.1.206:8081/live/record' for key 'IDX_server_info_np'
+### The error may involve com.dbr.eduLive.Dao.ServiceDao.serverInsert-Inline
+### The error occurred while setting parameters
+### SQL: insert into server_info    (      netFlag    ,     serverType    ,     serverName    ,     serverApi    )    values    (      ?    ,     ?    ,     ?    ,     ?    )
+### Cause: java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'LIVE录像01-192.168.1.206:8081/live/record' for key 'IDX_server_info_np'
+; SQL []; Duplicate entry 'LIVE录像01-192.168.1.206:8081/live/record' for key 'IDX_server_info_np'; nested exception is java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'LIVE录像01-192.168.1.206:8081/live/record' for key 'IDX_server_info_np'
+E0523 18:32:03.736157  8145 webserver.cpp:514] 解析注册录制 数据失败 main_ret:-1
+E0523 18:32:08.746064  8159 webserver.cpp:297] 定时上传  main_ret:0
+E0523 18:32:13.754952  8159 webserver.cpp:297] 定时上传  main_ret:0
+E0523 18:32:18.763458  8159 webserver.cpp:297] 定时上传  main_ret:0
+E0523 18:32:23.772603  8159 webserver.cpp:297] 定时上传  main_ret:0
+E0523 18:32:28.778547  8159 webserver.cpp:297] 定时上传  main_ret:0
+E0523 18:32:33.783699  8159 webserver.cpp:297] 定时上传  main_ret:0
+E0523 18:32:38.793154  8159 webserver.cpp:297] 定时上传  main_ret:0
+E0523 18:32:43.802906  8159 webserver.cpp:297] 定时上传  main_ret:0
+E0523 18:32:48.812690  8159 webserver.cpp:297] 定时上传  main_ret:0
+E0523 18:32:53.822636  8159 webserver.cpp:297] 定时上传  main_ret:0
+E0523 18:32:58.832374  8159 webserver.cpp:297] 定时上传  main_ret:0
+E0523 18:33:03.841634  8159 webserver.cpp:297] 定时上传  main_ret:0
+E0523 18:33:08.851047  8159 webserver.cpp:297] 定时上传  main_ret:0
+E0523 18:33:13.860776  8159 webserver.cpp:297] 定时上传  main_ret:0

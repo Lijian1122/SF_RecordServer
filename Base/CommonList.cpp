@@ -32,11 +32,14 @@ void *CommonList::popLockList()
     sem_wait(&bin_sem); 
 
     void *data = NULL;	
-    if(!m_list.empty())
+    /*if(!m_list.empty())
     {
 	  data = m_list.front();
 	  m_list.pop_front();
-    }
+    }*/
+    data = m_list.front();
+     m_list.pop_front();
+
     sem_post(&bin_blank); 	
     return data;
 }

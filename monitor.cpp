@@ -10,61 +10,9 @@
 #include "Base/base.h"
 
 #include "glog/logging.h"
- 
-#define LOG_FILE "recordmonitor."
 
-#define IPPORT "http://192.168.1.205:8080/live/"
+#define LOG_FILE "./log/recordmonitor."
 
-using json = nlohmann::json;
-
-string recordID;
-string updateAPI;
-
-int httpGetfun(int res)
-{
-
-   printf("recordID :%s  %s\n", recordID.c_str() ,updateAPI.c_str());
-  
-   LibcurClient  m_httpclient;
-    
-   string url = updateAPI;
-   url.append("?serverId=").append(recordID);
-   
-   LOG(INFO)<<"offline url:"<<url;
-
-   int main_ret = m_httpclient.HttpGetData(url.c_str());
-
-   if(main_ret != 0)
-   {   
-       LOG(ERROR) << "注册录制服务离线失败 错误代号:"<<main_ret;
-       //curl_free(format);
-       return main_ret;
-
-   }else
-   {
-      json m_object = json::parse(m_httpclient.GetResdata());
-      if(m_object.is_object())
-      {
-         string resCode = m_object.value("code", "oops");
-         main_ret = atoi(resCode.c_str() );
-
-         if(0 != main_ret)
-         {
-             string message = m_object.value("msg", "oops"); //错误信息:%s ,message.c_str()
-             
-             LOG(ERROR)<< "注册录制服务离线失败 main_ret: "<<main_ret;
-             LOG(ERROR)<< "message: "<<message;
-             //curl_free(format);
-             return main_ret ;
-         }
-      }
-   }
-
-   //curl_free(format);
-
-   return 0;
-}
- 
 int main(int argc, char **argv) 
 {
     int ret, i, status;
@@ -79,9 +27,6 @@ int main(int argc, char **argv)
     FLAGS_max_log_size = 500; //最大日志大小为 100MB
     FLAGS_stop_logging_if_full_disk = true; //当磁盘被写满时，停止日志输出
 
-    int msqid = createMsgQueue();
-    char buf[MSGSIZE];
-
     if (argc < 2) 
     {	
         sprintf(buff,"Usage:%s <exe_path> <args...>", argv[0]);     
@@ -89,19 +34,14 @@ int main(int argc, char **argv)
 		return -1;
     }
 	
-    for (i = 1; i < argc; ++i) 
+    for(i = 1; i < argc; ++i) 
     {
         child_argv[i-1] = (char *)malloc(strlen(argv[i])+1);
         strncpy(child_argv[i-1], argv[i], strlen(argv[i]));   
     }
-
-	  int execTime = 0;
     while(1)
     {
-
         pid = fork(); 
-
-        execTime++;
 
         printf("pid: %d\n", pid);
 
@@ -110,9 +50,7 @@ int main(int argc, char **argv)
         {
             printf("fork() error.errno:%d error:%s", errno, strerror(errno));
             LOG(ERROR)<<"fork() error.errno error:"<< strerror(errno);
-
-            destroyMsgQueue(msqid);
-			      break;
+            break;
 
         }else if(pid == 0) 
         {
@@ -122,45 +60,24 @@ int main(int argc, char **argv)
            		
             if (ret < 0) 
             {
-                printf("Child process execv ret:%d errno:%d error:%s time:%d",ret, errno, strerror(errno),execTime);
-                sprintf(buff,"Child process ret:%d errno:%d error:%s time:%d",ret, errno, strerror(errno),execTime);                
+                printf("Child process execv ret:%d errno:%d error:%s",ret, errno, strerror(errno));
+                sprintf(buff,"Child process ret:%d errno:%d error:%s",ret, errno, strerror(errno));                
                 LOG(ERROR)<<buff;
-                destroyMsgQueue(msqid);
                 break;
             }
             
         }else
         {
-            //pid = wait(&status);
             waitpid(pid, &status,0);
-
-            //服务端先接收
-            recvMsg(msqid, CLIENT_TYPE, buf);
-            printf("客户端说：%s\n ", buf);
-           
-            string recvbuff = buf;
-            if(!recvbuff.empty())
-            {
-                json m_object = json::parse(recvbuff);
-                recordID = m_object.value("serverID", "oops");
-                updateAPI = m_object.value("updateAPI","oops");
-            }
-             
-            LOG(INFO)<<recordID<<"   "<<updateAPI;
-            
             printf("Child process id: %d \n", pid);
             LOG(INFO)<<"hild process id: "<<(int)pid;
 
+            //检测到录制服务挂了，进入循环再次启动录制服务
             printf("Child process exit with status: %d\n",status);
             LOG(INFO)<<"Child process exit with status:"<<status;
 
-            if(0 != status)
-            {
-                ret = httpGetfun(status);
-
-                destroyMsgQueue(msqid);
-                break;
-            }
+            //确保进程已经杀死
+            kill(pid, SIGTERM);
         }
     }
 

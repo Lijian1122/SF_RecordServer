@@ -13,6 +13,10 @@ v 0.0.3
 2019.01.16 将定时任务进行统一处理，枚举来代替不同的定时类型
 2019.01.18 将录制任务删除定时器机制改为事件机制，用线程同步来实现即时删除录制任务任务
 2019.01.25 将任务对象存储数据结构改为list，将list的出队入队操作封装为一个类
+
+v 0.0.4
+2019.05.23 添加配置文件
+2019.05.23 修改监控进程功能
 ******************************************************/
 #ifndef WEBSERVER_H
 #define WEBSERVER_H
@@ -29,19 +33,20 @@ v 0.0.3
 #include "Base/CommonList.h"
 #include "RecordSave/RecordSaveRunnable.h"
 
-extern const char *s_http_port;
-extern string FILEFOLDER,IpPort,record_serverId,ServerCreate,ServerDelete,ServerSelect,ServerUpdate,liveUpdate,liveSelect,liveUpload;
+extern string ServerPort, FILEFOLDER,IpPort,APIStr, record_serverId,ServerCreate,ServerDelete,ServerSelect,ServerUpdate,liveUpdate,liveSelect,liveUpload;
 
 int httpSev_flag = 1; //http服务线程退出标志
 int recordMange_flag = 1; //任务管理线程退出标志
 int record_flag = 1; //录制服务在线状态上传标志
 
-string APIStr="/live/record";
-string IPPORT="http://192.168.1.205:8080/live/";
+/*string APIStr="/live/record";
+string HttpAPIStr="http://192.168.1.205:8080/live/";
 
 string updateOnlineUrl;  //更新录制在线Url
 string LOGFOLDER =  "./recordlog/";
-string serverName = "LIVE录像01";
+string ServerName = "LIVE录像01";*/
+
+string HttpAPIStr,updateOnlineUrl,LOGFOLDER,ServerName;
 
 //Http服务返回值枚举
 enum RESCODE{ 
@@ -49,7 +54,8 @@ enum RESCODE{
    TYPE_ERROR,
    LIVEID_ERROR,
    METHOD_ERROR,
-   MALLOC_ERROR   
+   MALLOC_ERROR,
+   URL_ERROR   
 };
 
 //定时器任务类型
@@ -58,6 +64,13 @@ enum TIMER_TYPE{
    CHEDISK
 };
 
+//录制命令枚举
+enum RECORDCMD{
+    START = 0, //开始录制
+    STOP   //停止录制
+};
+
+
 //Http接口返回值类型
 enum PARSE_TYPE{ 
    GETAPI = 0,
@@ -65,15 +78,19 @@ enum PARSE_TYPE{
    UPDATA
 };
 
-//直播参数结构体
+//直播参数结构
 typedef struct liveParmStruct
 {
-   char *liveID;
-   char *liveType;
+   string liveID;
+   RECORDCMD cdmType;
 }liveParmStruct;
 
 //直播参数队列  直播对象队列 删除对象队列
 CommonList *LiveParmList, *RecordSaveList, *DeleteRecordList;
+
+//读取配置文件对象
+CConfigFileReader config_file("server.conf");
+
 
 //线程对象
 pthread_t recordManage_t;

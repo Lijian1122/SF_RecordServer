@@ -28,8 +28,7 @@ V0.0.2
 #define HTON32(x)  ((x>>24&0xff)|(x>>8&0xff00)| (x << 8 & 0xff0000) | (x << 24 & 0xff000000))
 #define UN_ABS(a,b) (a>=b?a-b:b-a)
 
-extern const char *s_http_port;
-extern string FILEFOLDER,IpPort,record_serverId,ServerCreate,ServerDelete,ServerSelect,ServerUpdate,liveUpdate,liveSelect,liveUpload;
+extern string ServerPort,FILEFOLDER,IpPort,APIStr,record_serverId,ServerCreate,ServerDelete,ServerSelect,ServerUpdate,liveUpdate,liveSelect,liveUpload;
 
 using json = nlohmann::json;
 
@@ -84,7 +83,7 @@ class RecordSaveRunnable
 {
 	
 public:
-    RecordSaveRunnable(char *pdata);
+    RecordSaveRunnable(const char *pdata);
 	
     ~RecordSaveRunnable();
 

@@ -25,10 +25,11 @@
 #include <stdio.h>
 #include <dirent.h>
 
-extern const char *s_http_port;
+extern string ServerPort;
 extern string FILEFOLDER;
 extern string IpPort;
 extern string record_serverId;
+extern string APIStr;
 
 //Http API方法名
 extern string ServerCreate;

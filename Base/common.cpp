@@ -3,12 +3,12 @@
 
 using namespace std;
 
-const char *s_http_port="8081";
-
-string FILEFOLDER="./recordFile/";
-string IpPort = "http://";
+string ServerPort;
+string FILEFOLDER;
+string IpPort;
 
 string record_serverId; 
+string APIStr;
 
 //Http API方法名
 string ServerCreate;

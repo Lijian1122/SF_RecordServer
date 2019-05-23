@@ -12,6 +12,11 @@ SYS=posix
 CRYPTO=OPENSSL
 #CRYPTO=POLARSSL
 #CRYPTO=GNUTLS
+
+BASE_ROOT = ../Base
+BATHPATH = -L $(BASE_ROOT)
+LIBVAR = -lbase
+
 LIBZ=-lz
 LIB_GNUTLS=-lgnutls -lhogweed -lnettle -lgmp $(LIBZ)
 LIB_OPENSSL=-lssl -lcrypto $(LIBZ)
@@ -23,7 +28,7 @@ CRYPTO_DEF=$(DEF_$(CRYPTO))
 DEF=-DRTMPDUMP_VERSION=\"$(VERSION)\" $(CRYPTO_DEF) $(XDEF)
 #OPT=-O2 -g -std=gnu++11 -std=c++11
 CFLAGS= -g -Wall -fPIC -Wno-error=overflow $(XCFLAGS) $(INC) $(DEF) $(OPT)
-CPPFLAGS += -g -fPIC -std=c++11
+CPPFLAGS += -g -fPIC -std=c++11 -Wno-deprecated
 LDFLAGS=-Wall $(XLDFLAGS)
 
 SHARE := -shared
@@ -75,7 +80,7 @@ $(LIBRTMP): FORCE
 	@cd librtmp; $(MAKE) all
 
 $(PROGS): $(OBJS)
-	$(CC) $(LDFLAGS) $(SHARE) -o $@ $(OBJS)  $(LIBS) 
+	$(CC) $(LDFLAGS) $(SHARE) -o $@ $(OBJS) $(BATHPATH) $(LIBVAR) $(LIBS) 
 
 #rtmpdump.o: rtmpdump.c $(INCRTMP) Makefile
 #thread.o: thread.c $(INCRTMP) thread.h

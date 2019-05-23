@@ -1,6 +1,6 @@
 #include "RecordSaveRunnable.h"
 
-RecordSaveRunnable::RecordSaveRunnable(char *pdata)
+RecordSaveRunnable::RecordSaveRunnable(const char *pdata)
 {
  
      m_recordID = pdata;
@@ -34,7 +34,7 @@ RecordSaveRunnable::RecordSaveRunnable(char *pdata)
      afile = NULL;
      vfile = NULL;
      wfile = NULL;
-	 timestampSize = 4;
+     timestampSize = 4;
 }
 
 
@@ -191,11 +191,11 @@ int RecordSaveRunnable::StopRecord()
          fclose(wfile);
          wfile = NULL;
       } 
-      if(NULL != flvfile)
+      /*if(NULL != flvfile)
       {
          fclose(flvfile);
          flvfile = NULL;
-      }
+      }*/
 	  
 	  LOG(INFO) << "录制对象读 写线程都已停止  ret:"<<resCode<<" 直播ID:"<<m_recordID;
 
@@ -299,7 +299,7 @@ int RecordSaveRunnable::CreateFile(std::string &resData)
        fwrite(resData.c_str(), 1, resData.size(), wfile);
     }
 
-    flvfile = fopen("test.flv","ab+");
+    //flvfile = fopen("test.flv","ab+");
    
     LOG(INFO) << "打开所有文件成功  直播ID:"<<m_recordID;
     return ret;
@@ -433,7 +433,7 @@ begin:
      {	 
        int nRead = RTMP_Read(m_pRtmp, buf, bufsize);   
 
-       fwrite(buf, sizeof(char), nRead, flvfile); 
+       //fwrite(buf, sizeof(char), nRead, flvfile); 
        if(nRead > 0) //能读到数据
        {          
           if(0 != re_Connects)
@@ -734,8 +734,9 @@ void RecordSaveRunnable::UploadRecordStopFlag()
     {
 		
         std::string UrlStr = "http://localhost:";
-        UrlStr.append(s_http_port);
-        UrlStr.append("/live/record?liveId=");
+        UrlStr.append(ServerPort);
+        UrlStr.append(APIStr);
+        UrlStr.append("?liveId=");
         UrlStr.append(m_recordID);
         UrlStr.append("&type=1");
 

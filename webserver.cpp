@@ -26,7 +26,7 @@ void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
 	  
       RESCODE ret = RESCODE::NO_ERROR;
 	  
-      if(strcmp(methodStr, "/live/record") == 0)
+      if(strcmp(methodStr, APIStr.c_str()) == 0)
       {    
          LOG(INFO) << "开始解析:"<<methodStr;
 		 
@@ -35,57 +35,50 @@ void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
          char parmStr[parmlen];
          sprintf(parmStr, "%.*s",parmlen,hm->query_string.p);
 		 
-		 printf("url参数长度：%d  %s\n",parmlen ,parmStr);
-		     
-         char *liveId_buf = (char*)malloc(sizeof(char)*parmlen);
-         memset(liveId_buf, 0 ,sizeof(char)*parmlen);
-         if(NULL == liveId_buf)
-         {       
-             LOG(ERROR) << "参数liveId malloc失败:"<<liveId_buf;
-             ret = RESCODE::MALLOC_ERROR;
-             goto end;            
-         }
-
-         char *type_buf = (char*)malloc(sizeof(char)*parmlen);
-         memset(type_buf, 0 ,sizeof(char)*parmlen);
-         if(NULL == type_buf)
-         {       
-             LOG(ERROR) << "参数liveType malloc失败:"<<type_buf;
-             ret = RESCODE::MALLOC_ERROR;
-             goto end;            
-         }
+	printf("url参数长度：%d  %s\n",parmlen ,parmStr);
+  
+        if(parmlen == 0 ||  parmlen > 1024)
+        {
+              LOG(ERROR)<<"Url Error";
+              ret = RESCODE::URL_ERROR;
+              goto end;
+        }
+        char  liveId_buf[1024] = {0};
+        char  type_buf[1024] = {0};
 		 
-         mg_get_http_var(&hm->query_string, "liveId", liveId_buf, parmlen); //获取liveID	 
-	     mg_get_http_var(&hm->query_string, "type", type_buf, parmlen);  //获取录制命令
+        mg_get_http_var(&hm->query_string, "liveId", liveId_buf, parmlen); //获取liveID	 
+        mg_get_http_var(&hm->query_string, "type", type_buf, parmlen);  //获取录制命令
 		    
-         LOG(INFO) << "获取参数 : "<<liveId_buf<<"  "<<type_buf;   
+         LOG(INFO) << "获取参数 : "<<liveId_buf<<"  "<<type_buf;
 
-         //目前录制命令只支持0 1
-         if((strcmp(type_buf,"0") == 0) || (strcmp(type_buf,"1") == 0))
+         if((strcmp(liveId_buf,"")  == 0 ) ||  (strcmp(type_buf,"") == 0))
          {
-            if(strlen(liveId_buf) > 0)
-            {
-			   liveParmStruct *m_parmData = (liveParmStruct*)malloc(sizeof(liveParmStruct));
-               m_parmData->liveID = liveId_buf;
-			   m_parmData->liveType = type_buf; 
+              LOG(ERROR)<<"参数为空 直播ID或操作类型为空";
+              ret = RESCODE::LIVEID_ERROR;
+              goto end;
+         }
 
-			   //参数入 直播参数队列
-               LiveParmList->pushLockList((void*)m_parmData);			    
-            }else
-			{
-				LOG(ERROR)<<"参数错误，直播ID为空";
-                ret = RESCODE::LIVEID_ERROR;
-			}
-         }else
+         int cmdType = atoi(type_buf);
+         liveParmStruct *m_parmData = new liveParmStruct;
+         if(NULL != m_parmData)
          {
-            LOG(ERROR)<<"未知的录制命令  直播ID:"<<liveId_buf;
-            ret = RESCODE::TYPE_ERROR;
-         } 	
+            m_parmData->liveID = liveId_buf;
+            m_parmData->cdmType = (RECORDCMD)cmdType;
+
+           //参数入 直播参数队列
+           LiveParmList->pushLockList((void*)m_parmData);
+        }else
+        {
+           LOG(ERROR)<<"malloc 失败";
+           ret = RESCODE::MALLOC_ERROR;
+           goto end;
+        }
      }else
      {
         ret = RESCODE::METHOD_ERROR;
      }    
 end:
+   		     
       char numStr[10] ={};
       snprintf(numStr, sizeof(numStr), "%d",ret);
 
@@ -122,17 +115,17 @@ void *recordManage_fun(void *data)
        if(NULL != parmdata)
        {
 		
-	     liveParmStruct *pdata = (liveParmStruct*)parmdata;
+	 liveParmStruct *pdata = (liveParmStruct*)parmdata;
                 
-         LOG(INFO) << "管理线程获取参数 直播ID:"<<pdata->liveID<<"  Type:"<<pdata->liveType;
+         LOG(INFO) << "管理线程获取参数 直播ID:"<<pdata->liveID<<"  Type:"<<pdata->cdmType;
 
-         if((strcmp(pdata->liveType,"0")) == 0) //开始录制
+         if(pdata->cdmType == RECORDCMD::START) //开始录制
          {      
 			 //判断liveID是否已经存在
-			 if(NULL == RecordSaveList->findList((void*)pdata->liveID))
+			 if(NULL == RecordSaveList->findList((void*)pdata->liveID.c_str()))
 			 {
 				  //新建录制对象,并启动录制
-				  RecordSaveRunnable *recordRun = new RecordSaveRunnable(pdata->liveID);   
+				  RecordSaveRunnable *recordRun = new RecordSaveRunnable(pdata->liveID.c_str());   
                   ret = recordRun->StartRecord();			  
 				  if(ret == 0)//启动成功
                   {		
@@ -152,10 +145,10 @@ void *recordManage_fun(void *data)
 			 {
                   LOG(ERROR) << "该录制任务正在录制中  直播ID:"<<pdata->liveID;         
              }			
-        }else if(strcmp(pdata->liveType,"1") == 0)  //停止录制
+        }else if(pdata->cdmType == RECORDCMD::STOP)  //停止录制
         {
 			 //判断liveID是否已经存在
-			 void *recordData = RecordSaveList->findList((void*)pdata->liveID);
+			 void *recordData = RecordSaveList->findList((void*)pdata->liveID.c_str());
 			 if(NULL != recordData)//在录制对象队列中找到找到liveID
 			 {	
                  //停止录制任务		 
@@ -171,19 +164,16 @@ void *recordManage_fun(void *data)
              {
 				 LOG(ERROR) << "未找到该录制任务  直播ID:"<<pdata->liveID;            
 			 }				 
-       }	
-       if(NULL != pdata->liveID)
-       {
-           free(pdata->liveID);
-           pdata->liveID = NULL;
-       }
-       if(NULL != pdata->liveType)
-       {
-	       free(pdata->liveType);
-           pdata->liveType = NULL;
-       }
- 
+       }else{
+            
+          LOG(ERROR) << "未知的命令 type:"<<pdata->liveID;
+     }
+
+     //删除结构体
+     delete pdata;
+     pdata = NULL;
     }
+
    }
    return data;
 }
@@ -191,8 +181,8 @@ void *recordManage_fun(void *data)
 //停止录制任务 线程
 void *stopRecord_fun(void *data)
 {	
-	int ret = 0;
-	void *m_data = NULL;
+    int ret = 0;
+    void *m_data = NULL;
     while(recordMange_flag)
     {   
         //删除任务出 删除队列
@@ -252,7 +242,7 @@ int parseResdata(string &resdata,PARSE_TYPE m_Type)
                         ServerCreate = data_object.value("server_create", "oops");
                         ServerDelete = data_object.value("server_delete", "oops");
                         ServerSelect = data_object.value("server_select", "oops");
-                        //ServerUpdate = m_object.value("server_update", "oops");
+                        ServerUpdate = data_object.value("server_update", "oops");
 
                         liveUpdate = data_object.value("live_update", "oops");
                         liveSelect = data_object.value("live_select", "oops");
@@ -304,6 +294,7 @@ void updateOnline_fun()
 		{
 		  LOG(ERROR) << "解析定时返回数据失败  main_ret:"<<main_ret; 
 		}
+    LOG(ERROR) << "定时上传  main_ret:"<<main_ret;
     }else
     {
        //LOG(ERROR) << "调用定时上在线状态接口失败  main_ret:"<<main_ret;  
@@ -377,7 +368,7 @@ void *httpTime_fun(void *pdata)
 
    updateOnlineUrl = IpPort;
    updateOnlineUrl.append(ServerUpdate);
-   updateOnlineUrl.append("serverId=");
+   updateOnlineUrl.append("?serverId=");
    
    updateOnlineUrl.append(record_serverId);
    updateOnlineUrl.append("&netFlag=20");
@@ -405,9 +396,9 @@ void *httpServer_fun(void *pdata)
 
    mg_mgr_init(&mgr, NULL);
    
-   printf("启动Http服务 port:%s\n", s_http_port);
-   LOG(INFO) << "Http服务启动  port:"<<s_http_port;
-   nc = mg_bind(&mgr, s_http_port, ev_handler);
+   printf("启动Http服务 port:%s\n", ServerPort.c_str());
+   LOG(INFO) << "Http服务启动  port:"<<ServerPort.c_str();
+   nc = mg_bind(&mgr, ServerPort.c_str(), ev_handler);
    if(nc == NULL) 
    {
       printf("Failed to create listener\n");
@@ -458,10 +449,18 @@ int CreateLogFileDir(const char *sPathName)
 int startServer(void)
 {
     int main_ret = 0;
-	std::string resStr = "";
+    std::string resStr = "";
     m_httpclient = new LibcurClient;
     std::string url;
 
+    ServerPort  = config_file.GetConfigName("ServerPort");
+    FILEFOLDER = config_file.GetConfigName("Filefolder");
+    IpPort = config_file.GetConfigName("IpPort");
+    APIStr = config_file.GetConfigName("APIStr");
+    HttpAPIStr = config_file.GetConfigName("HttpAPIStr");
+    LOGFOLDER  = config_file.GetConfigName("Logfolder");
+    ServerName = config_file.GetConfigName("ServerName");   
+ 
     main_ret = CreateLogFileDir(LOGFOLDER.c_str());
     if(0 != main_ret)
     {
@@ -478,10 +477,8 @@ int startServer(void)
     FLAGS_stop_logging_if_full_disk = true; //当磁盘被写满时，停止日志输出
 
 
-    //获取Http API 
-    url = IPPORT;
-    url = url.append("main?ClientID=1001"); 
-    main_ret = m_httpclient->HttpGetData(url.c_str());
+    //获取Http API
+    main_ret = m_httpclient->HttpGetData(HttpAPIStr.c_str());
     if(0 == main_ret)
     {
 	   std::string resData = m_httpclient->GetResdata();
@@ -501,10 +498,10 @@ int startServer(void)
    url = IpPort;
    url.append(ServerCreate);
    url.append("?serverName=");
-   char *format = m_httpclient->UrlEncode(serverName);
+   char *format = m_httpclient->UrlEncode(ServerName);
    url.append(format);
    url.append("&serverType=LiveRecord&serverApi=192.168.1.206:");
-   url.append(s_http_port);    
+   url.append(ServerPort);    
    url.append(APIStr);
    
    main_ret = m_httpclient->HttpGetData(url.c_str());
@@ -522,17 +519,6 @@ int startServer(void)
       LOG(ERROR) << "调用注册录制服务 失败  main_ret:"<<main_ret;  
       //return main_ret;
    }
-
-    //往消息队列里面写数据,发给监控进程
-    // int msqid = getMsgQueue();
-
-    // json obj;
-    // string deleteAPI = IpPort;
-    // deleteAPI.append(ServerDelete);
-    // obj["serverID"] = record_serverId;
-    // obj["updateAPI"] = deleteAPI;
-    // std::string sendmsg = obj.dump();
-    // sendMsg(msqid, CLIENT_TYPE, sendmsg.c_str());
 
     //初始化三个队列
     LiveParmList = new CommonList(true);

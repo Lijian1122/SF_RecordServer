@@ -3,12 +3,19 @@ BINDIR=/bin
 
 CC = g++
 CFLAGS  := -Wall -fPIC -std=c++11 -g -Wno-write-strings
-CPPFLAGS := -Wall -fPIC  -std=c++11 -g -Wno-write-strings
+CPPFLAGS := -Wall -fPIC  -std=c++11 -g -Wno-write-strings -Wno-deprecated
 
 RECORDSAVE= RecordSave/libRecordSave.so
 BASE= Base/libbase.so
 
-OPEN_LIB = -lcurl -lRecordSave -lglog -lpthread -lbase
+BASE_ROOT = ./Base
+BATHPATH = -L $(BASE_ROOT)
+LIBVAR = -lbase
+
+REDIS_ROOT = ./RecordSave
+LIBPATH = -L $(REDIS_ROOT)
+
+OPEN_LIB =  -lRecordSave -lcurl -lglog -lpthread
 
 MONITOR = recordMonitor
 SERVER = recordServer
@@ -22,7 +29,6 @@ all : $(BASE) $(RECORDSAVE) $(TARGET)
 
 install:	$(TARGET)
 	cp $(TARGET) $(BINDIR)
-	@cd Base; $(MAKE) install
 	@cd RecordSave; $(MAKE) install
 
 FORCE:
@@ -34,10 +40,10 @@ $(RECORDSAVE): FORCE
 	@cd RecordSave; $(MAKE) all
 
 $(MONITOR) : $(MOBJS)
-	$(CC) $(CPPFLAGS) -o $@ $(MOBJS) $(OPEN_LIB)
+	$(CC) $(CPPFLAGS) -o $@ $(MOBJS) $(BATHPATH) $(LIBVAR) $(LIBPATH) $(OPEN_LIB)
 
 $(SERVER) : $(OBJS)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $(OBJS) $(OPEN_LIB)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $(OBJS) $(BATHPATH) $(LIBVAR) $(LIBPATH) $(OPEN_LIB)
 
 clean:
 	rm -f $(OBJS) $(MOBJS) $(TARGET)
