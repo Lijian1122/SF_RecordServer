@@ -137,7 +137,7 @@ void *recordManage_fun(void *data)
 				  if(ret == 0)//启动成功
                   {		
                        //录制对象入队列				  
-					   RecordSaveList->pushList((void*)recordRun);
+		       RecordSaveList->pushList((void*)recordRun);
                        LOG(INFO) << "启动录制任务成功   ret:"<<ret<<"   直播ID:"<<pdata->liveID;
                   }else
                   {       

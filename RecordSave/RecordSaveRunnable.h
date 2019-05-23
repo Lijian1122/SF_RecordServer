@@ -204,6 +204,9 @@ private:
    FILE *afile;
    FILE *vfile;
    FILE *wfile; 
+
+   /*flv文件*/
+   FILE *flvfile;
    
    /*拉流URL*/
    string  m_pullUrl;

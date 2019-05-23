@@ -17,7 +17,7 @@
 #include <list>
 #include <iostream>
 #include <algorithm>
-//#include "../RecordSave/RecordSaveRunnable.h"
+#include "../RecordSave/RecordSaveRunnable.h"
 #include "glog/logging.h"
 
 
@@ -30,10 +30,10 @@ typedef struct finder_t
   }
   bool operator()(void *data)
   {  
-     // RecordSaveRunnable *m_runnable = (RecordSaveRunnable*)data;
-    //  string Id = m_runnable->GetRecordID();
-    //  return (strcmp(rID ,Id.c_str()) == 0);
-     return false;
+      RecordSaveRunnable *m_runnable = (RecordSaveRunnable*)data;
+      string Id = m_runnable->GetRecordID();
+      return (strcmp(rID ,Id.c_str()) == 0);
+    // return false;
   }
   char *rID;
 }finder_t;

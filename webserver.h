@@ -26,6 +26,7 @@ v 0.0.3
 #include "mongoose.h"
 #include "glog/logging.h"
 #include "Base/base.h"
+#include "Base/CommonList.h"
 #include "RecordSave/RecordSaveRunnable.h"
 
 extern const char *s_http_port;

@@ -95,19 +95,20 @@ int RecordSaveRunnable::ParseJsonInfo(std::string &jsonStr ,std::string &resCode
 //启动录制任务
 int RecordSaveRunnable::StartRecord()
 {
-	  //查询直播信息及拉流URL
+      //查询直播信息及拉流URL
       std::string resData ,resCodeInfo, liveinfo;
       string urlStr = IpPort;
 
       urlStr.append(liveSelect).append("?liveId=").append(m_recordID);
       urlStr.append("&userType=1");
+      urlStr.append("&operateId=123");
 
-      LOG(INFO)<<"select LiveInfoUrl:"<<urlStr<<"  直播ID:"<<m_recordID;
+      LOG(ERROR)<<"select LiveInfoUrl:"<<urlStr<<"  直播ID:"<<m_recordID;
       int m_ret = recive_http->HttpGetData(urlStr.c_str());
 
       if(0 == m_ret)
       {
-		 resData = recive_http->GetResdata();
+         resData = recive_http->GetResdata();
          if(0 != ParseJsonInfo(resData ,resCodeInfo ,liveinfo ,m_pullUrl ,URL_TYPE::SELECT_LIVEURL))
          {
             LOG(ERROR) << "获取直播信息失败   ret:"<<m_ret<<" 直播ID:"<<m_recordID;
@@ -190,6 +191,11 @@ int RecordSaveRunnable::StopRecord()
          fclose(wfile);
          wfile = NULL;
       } 
+      if(NULL != flvfile)
+      {
+         fclose(flvfile);
+         flvfile = NULL;
+      }
 	  
 	  LOG(INFO) << "录制对象读 写线程都已停止  ret:"<<resCode<<" 直播ID:"<<m_recordID;
 
@@ -292,6 +298,8 @@ int RecordSaveRunnable::CreateFile(std::string &resData)
     {
        fwrite(resData.c_str(), 1, resData.size(), wfile);
     }
+
+    flvfile = fopen("test.flv","ab+");
    
     LOG(INFO) << "打开所有文件成功  直播ID:"<<m_recordID;
     return ret;
@@ -377,16 +385,16 @@ void *RecordSaveRunnable::rtmpRecive_f()
        LOG(ERROR) << "RtmpInit no free memory  直播ID:"<<m_recordID ;
        return  (void*)0;
     }
-	memset(buf, 0, bufsize);
+    memset(buf, 0, bufsize);
 	
-	int re_Connects = 0;  //rtmp重连次数
+    int re_Connects = 0;  //rtmp重连次数
     double duration = 0.0;
     uint32_t bufferTime = (uint32_t)(duration * 1000.0) + 5000; 
 
     m_pullUrl.append(m_recordID);
-   //m_pullUrl = "rtmp://www.bj-mobiletv.com:8000/live/FreeManCamera2018003";
+    //m_pullUrl = "rtmp://192.168.1.207/live/liveid666";
 
-    recive_httpflag = 1;
+    recive_httpflag = 0;
     int m_ret = UpdataRecordflag(recive_http,recive_httpflag);
  
 begin: 
@@ -423,7 +431,9 @@ begin:
      LOG(INFO) << "录制开始  直播ID:"<<m_recordID;
      while(runningp) 
      {	 
-       int nRead = RTMP_Read(m_pRtmp, buf, bufsize);    
+       int nRead = RTMP_Read(m_pRtmp, buf, bufsize);   
+
+       fwrite(buf, sizeof(char), nRead, flvfile); 
        if(nRead > 0) //能读到数据
        {          
           if(0 != re_Connects)
@@ -764,10 +774,12 @@ int RecordSaveRunnable::UpdataRecordflag(LibcurClient *http_client ,int flag)
    
     urlparm.append(m_recordID);
     urlparm.append("&recordFlag=");
+    //urlparm.append("&operateId=123");
 
     char flagStr[10] ={};
     snprintf(flagStr, sizeof(flagStr), "%d",flag);
     urlparm.append(flagStr);
+    urlparm.append("&operateId=123");
 
     std::string updataUrl = IpPort + urlparm;
  
@@ -779,8 +791,9 @@ int RecordSaveRunnable::UpdataRecordflag(LibcurClient *http_client ,int flag)
 	    return m_ret;
     }
     std::string resData = http_client->GetResdata();
-	
-	m_ret = ParseJsonInfo(resData,resCodeInfo,liveinfo,url,URL_TYPE::UPDATA_RECORDFLAG);
+
+    //LOG(ERROR)<<"定时上传录制状态 Url:"<<updataUrl;	
+    m_ret = ParseJsonInfo(resData,resCodeInfo,liveinfo,url,URL_TYPE::UPDATA_RECORDFLAG);
 
     return m_ret;
 }
