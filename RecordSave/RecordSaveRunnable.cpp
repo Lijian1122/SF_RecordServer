@@ -34,6 +34,7 @@ RecordSaveRunnable::RecordSaveRunnable(const char *pdata)
      afile = NULL;
      vfile = NULL;
      wfile = NULL;
+     flvfile = NULL;
      timestampSize = 4;
 }
 
@@ -811,6 +812,7 @@ int RecordSaveRunnable::WriteFile(char *tagHead_buf,  char *tagData_buf, int tag
 	   if(0 != Write264data(timestamp_buf ,tagData_buf,tagdataSize))
        {
            LOG(ERROR) << "视频tag写入失败 直播ID: "<<m_recordID;
+           return 1;
        }
 	   
     }else if(tagHead_buf[0] == 0x08) //音频
@@ -818,6 +820,7 @@ int RecordSaveRunnable::WriteFile(char *tagHead_buf,  char *tagData_buf, int tag
 	   if(0 != WriteAac(timestamp_buf ,tagData_buf,tagdataSize))
        {
           LOG(ERROR) << "音频tag写入失败 直播ID: "<<m_recordID;
+          return 2;
        }
              
     }else if(tagHead_buf[0] == 0x12) //白板
@@ -826,6 +829,7 @@ int RecordSaveRunnable::WriteFile(char *tagHead_buf,  char *tagData_buf, int tag
        if(!ok)
        {
           LOG(ERROR) << "白板tag写入失败 直播ID: "<<m_recordID;
+          return 3;
        }
     } 
     return 0;     
@@ -1031,13 +1035,13 @@ RecordSaveRunnable::~RecordSaveRunnable()
 {  
       if(NULL != m_pRtmp)
       {
-	      RTMP_Free(m_pRtmp);
-	      m_pRtmp = NULL;
+	  RTMP_Free(m_pRtmp);
+	  m_pRtmp = NULL;
       }
 
       if (NULL != buf)
       {
-	     free(buf);
+	 free(buf);
          buf = NULL;
       }
 
@@ -1049,19 +1053,19 @@ RecordSaveRunnable::~RecordSaveRunnable()
   
      if(NULL != recive_http)
      {
-        delete(recive_http);
+        delete recive_http;
         recive_http = NULL;
      }
 
      if(NULL != save_http)
      {
-        delete(save_http);
+        delete save_http;
         save_http = NULL;
      }
 
      if(NULL != upload_http)
      {
-        delete(upload_http);
+        delete upload_http;
         upload_http = NULL;
      }
 }

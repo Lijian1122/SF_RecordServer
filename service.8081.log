@@ -1,0 +1,125 @@
+record_Server :[tid: 16150]
+http://192.168.1.205:8080/live/server_create/live/server_delete/live/server_select/live/live_update
+E0612 11:23:23.462252 16150 webserver.cpp:269] 接口返回数据异常 ret:-1  错误信息:
+### Error updating database.  Cause: java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'LIVE录像-http://192.168.1.206:8081/live/record' for key 'IDX_server_info_np'
+### The error may involve com.dbr.eduLive.Dao.ServiceDao.serverInsert-Inline
+### The error occurred while setting parameters
+### SQL: insert into server_info    (      netFlag    ,     serverType    ,     serverName    ,     serverApi    )    values    (      ?    ,     ?    ,     ?    ,     ?    )
+### Cause: java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'LIVE录像-http://192.168.1.206:8081/live/record' for key 'IDX_server_info_np'
+; SQL []; Duplicate entry 'LIVE录像-http://192.168.1.206:8081/live/record' for key 'IDX_server_info_np'; nested exception is java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'LIVE录像-http://192.168.1.206:8081/live/record' for key 'IDX_server_info_np'
+E0612 11:23:23.487673 16150 webserver.cpp:516] 解析注册录制 数据失败 main_ret:-1
+httpServer_fun :[tid: 16152]
+server starting
+time url:http://192.168.1.205:8080/live/server_update?serverId=&netFlag=1
+E0612 13:37:27.615483 16151 RecordSaveRunnable.cpp:106] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=100120190330EO9Fr0V6&userType=1&operateId=123  直播ID:100120190330EO9Fr0V6
+E0612 13:37:28.782364 16151 webserver.cpp:146] 该录制任务正在录制中  直播ID:100120190330EO9Fr0V6
+E0612 14:02:51.124593 16151 RecordSaveRunnable.cpp:106] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=100120190330gEdVJz8U&userType=1&operateId=123  直播ID:100120190330gEdVJz8U
+E0612 14:02:52.365595 16151 webserver.cpp:146] 该录制任务正在录制中  直播ID:100120190330gEdVJz8U
+E0612 15:06:29.026178 16151 RecordSaveRunnable.cpp:106] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=100120190330ztULVAWV&userType=1&operateId=123  直播ID:100120190330ztULVAWV
+启动Http服务 port:8081
+current dir:/home/SF_RecordServer
+/home/SF_RecordServer: total=934403555328 total=891116MB,free=911221940224,  free=869008MB
+current dir:/home/SF_RecordServer
+/home/SF_RecordServer: total=934403555328 total=891116MB,free=911221936128,  free=869008MB
+current dir:/home/SF_RecordServer
+/home/SF_RecordServer: total=934403555328 total=891116MB,free=911221870592,  free=869008MB
+current dir:/home/SF_RecordServer
+/home/SF_RecordServer: total=934403555328 total=891116MB,free=911221727232,  free=869008MB
+url参数长度：34  liveId=100120190330EO9Fr0V6&type=0
+url参数长度：34  liveId=100120190330EO9Fr0V6&type=0
+shuju:  25  直播ID:100120190330EO9Fr0V6
+shuju:  26  直播ID:100120190330EO9Fr0V6
+shuju:  26  直播ID:100120190330EO9Fr0V6
+shuju:  26  直播ID:100120190330EO9Fr0V6
+shuju:  22  直播ID:100120190330EO9Fr0V6
+shuju:  18  直播ID:100120190330EO9Fr0V6
+shuju:  22  直播ID:100120190330EO9Fr0V6
+shuju:  29  直播ID:100120190330EO9Fr0V6
+shuju:  114  直播ID:100120190330EO9Fr0V6
+shuju:  18  直播ID:100120190330EO9Fr0V6
+shuju:  106  直播ID:100120190330EO9Fr0V6
+shuju:  123  直播ID:100120190330EO9Fr0V6
+shuju:  129  直播ID:100120190330EO9Fr0V6
+shuju:  133  直播ID:100120190330EO9Fr0V6
+shuju:  139  直播ID:100120190330EO9Fr0V6
+shuju:  142  直播ID:100120190330EO9Fr0V6
+shuju:  145  直播ID:100120190330EO9Fr0V6
+shuju:  154  直播ID:100120190330EO9Fr0V6
+shuju:  157  直播ID:100120190330EO9Fr0V6
+shuju:  163  直播ID:100120190330EO9Fr0V6
+shuju:  164  直播ID:100120190330EO9Fr0V6
+shuju:  167  直播ID:100120190330EO9Fr0V6
+shuju:  173  直播ID:100120190330EO9Fr0V6
+shuju:  176  直播ID:100120190330EO9Fr0V6
+shuju:  179  直播ID:100120190330EO9Fr0V6
+shuju:  182  直播ID:100120190330EO9Fr0V6
+shuju:  188  直播ID:100120190330EO9Fr0V6
+shuju:  190  直播ID:100120190330EO9Fr0V6
+shuju:  197  直播ID:100120190330EO9Fr0V6
+shuju:  200  直播ID:100120190330EO9Fr0V6
+shuju:  201  直播ID:100120190330EO9Fr0V6
+shuju:  204  直播ID:100120190330EO9Fr0V6
+shuju:  207  直播ID:100120190330EO9Fr0V6
+shuju:  218  直播ID:100120190330EO9Fr0V6
+shuju:  215  直播ID:100120190330EO9Fr0V6
+shuju:  218  直播ID:100120190330EO9Fr0V6
+shuju:  215  直播ID:100120190330EO9Fr0V6
+shuju:  224  直播ID:100120190330EO9Fr0V6
+shuju:  227  直播ID:100120190330EO9Fr0V6
+shuju:  232  直播ID:100120190330EO9Fr0V6
+shuju:  235  直播ID:100120190330EO9Fr0V6
+shuju:  114  直播ID:100120190330EO9Fr0V6
+current dir:/home/SF_RecordServer
+/home/SF_RecordServer: total=934403555328 total=891116MB,free=911179911168,  free=868968MB
+url参数长度：34  liveId=100120190330gEdVJz8U&type=0
+shuju:  26  直播ID:100120190330gEdVJz8U
+url参数长度：34  liveId=100120190330gEdVJz8U&type=0
+shuju:  26  直播ID:100120190330gEdVJz8U
+current dir:/home/SF_RecordServer
+/home/SF_RecordServer: total=934403555328 total=891116MB,free=911022751744,  free=868819MB
+shuju:  22  直播ID:100120190330EO9Fr0V6
+shuju:  18  直播ID:100120190330EO9Fr0V6
+shuju:  115  直播ID:100120190330EO9Fr0V6
+shuju:  18  直播ID:100120190330EO9Fr0V6
+shuju:  113  直播ID:100120190330EO9Fr0V6
+shuju:  18  直播ID:100120190330EO9Fr0V6
+shuju:  22  直播ID:100120190330EO9Fr0V6
+shuju:  18  直播ID:100120190330EO9Fr0V6
+shuju:  29  直播ID:100120190330EO9Fr0V6
+shuju:  115  直播ID:100120190330EO9Fr0V6
+shuju:  18  直播ID:100120190330EO9Fr0V6
+shuju:  115  直播ID:100120190330EO9Fr0V6
+shuju:  235  直播ID:100120190330EO9Fr0V6
+shuju:  114  直播ID:100120190330EO9Fr0V6
+shuju:  26  直播ID:100120190330EO9Fr0V6
+shuju:  26  直播ID:100120190330EO9Fr0V6
+shuju:  26  直播ID:100120190330EO9Fr0V6
+shuju:  26  直播ID:100120190330EO9Fr0V6
+shuju:  26  直播ID:100120190330EO9Fr0V6
+shuju:  26  直播ID:100120190330EO9Fr0V6
+shuju:  26  直播ID:100120190330EO9Fr0V6
+shuju:  26  直播ID:100120190330EO9Fr0V6
+current dir:/home/SF_RecordServer
+/home/SF_RecordServer: total=934403555328 total=891116MB,free=910947151872,  free=868746MB
+url参数长度：34  liveId=100120190330ztULVAWV&type=0
+shuju:  25  直播ID:100120190330ztULVAWV
+url参数长度：34  liveId=100120190330ztULVAWV&type=0E0612 15:06:30.267168 16151 webserver.cpp:146] 该录制任务正在录制中  直播ID:100120190330ztULVAWV
+E0612 15:08:59.053177 27997 RecordSaveRunnable.cpp:531] 直播过程中rtmp连接中断 进行重连 直播ID:100120190330ztULVAWV
+E0612 15:08:59.053339 27997 RecordSaveRunnable.cpp:353] 准备重连 直播ID:100120190330ztULVAWV
+ERROR: RTMP_ReadPacket, failed to read RTMP packet header
+E0612 15:09:31.236555 27997 RecordSaveRunnable.cpp:353] 准备重连 直播ID:100120190330ztULVAWV
+ERROR: RTMP_ReadPacket, failed to read RTMP packet header
+E0612 15:10:03.380043 27997 RecordSaveRunnable.cpp:360] 重连次数超过三次，停止录制任务 直播ID:100120190330ztULVAWV
+E0612 16:19:08.871150 16151 RecordSaveRunnable.cpp:106] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=100120190330ztULVAWV&userType=1&operateId=123  直播ID:100120190330ztULVAWV
+E0612 16:19:10.087512 16151 webserver.cpp:146] 该录制任务正在录制中  直播ID:100120190330ztULVAWV
+E0612 16:23:45.141968 31768 RecordSaveRunnable.cpp:531] 直播过程中rtmp连接中断 进行重连 直播ID:100120190330ztULVAWV
+E0612 16:23:45.142134 31768 RecordSaveRunnable.cpp:353] 准备重连 直播ID:100120190330ztULVAWV
+ERROR: RTMP_ReadPacket, failed to read RTMP packet header
+E0612 16:24:17.307140 31768 RecordSaveRunnable.cpp:353] 准备重连 直播ID:100120190330ztULVAWV
+ERROR: RTMP_ReadPacket, failed to read RTMP packet header
+E0612 16:24:49.363212 31768 RecordSaveRunnable.cpp:360] 重连次数超过三次，停止录制任务 直播ID:100120190330ztULVAWV
+E0612 16:49:10.905141 16151 webserver.cpp:165] 未找到该录制任务  直播ID:100120190330gEdVJz8U
+E0612 17:06:32.658218 16151 webserver.cpp:165] 未找到该录制任务  直播ID:100120190330EO9Fr0V6
+E0612 17:06:35.015758 16151 webserver.cpp:165] 未找到该录制任务  直播ID:100120190330EO9Fr0V6
+E0612 17:08:16.024261 16151 RecordSaveRunnable.cpp:106] select LiveInfoUrl:http://192.168.1.205:8080/live/live_select?liveId=100120190330ztULVAWV&userType=1&operateId=123  直播ID:100120190330ztULVAWV
+E0612 17:08:17.182260 16151 webserver.cpp:146] 该录制任务正在录制中  直播ID:100120190330ztULVAWV

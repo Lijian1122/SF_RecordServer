@@ -285,16 +285,16 @@ int parseResdata(string &resdata,PARSE_TYPE m_Type)
 //上传录制在线
 void updateOnline_fun()
 {
-	int main_ret = s_httpclient->HttpGetData(updateOnlineUrl.c_str());
+    int main_ret = s_httpclient->HttpGetData(updateOnlineUrl.c_str());
     if(0 == main_ret)
     {
-		std::string resData = s_httpclient->GetResdata();
+	std::string resData = s_httpclient->GetResdata();
         main_ret = parseResdata(resData, PARSE_TYPE::UPDATA);
-		if(0 != main_ret)
-		{
-		  LOG(ERROR) << "解析定时返回数据失败  main_ret:"<<main_ret; 
-		}
-    LOG(ERROR) << "定时上传  main_ret:"<<main_ret;
+	if(0 != main_ret)
+	{
+	    LOG(ERROR) << "解析定时返回数据失败  main_ret:"<<main_ret; 
+	}
+    //LOG(ERROR) << "定时上传  main_ret:"<<main_ret;
     }else
     {
        //LOG(ERROR) << "调用定时上在线状态接口失败  main_ret:"<<main_ret;  
@@ -371,7 +371,7 @@ void *httpTime_fun(void *pdata)
    updateOnlineUrl.append("?serverId=");
    
    updateOnlineUrl.append(record_serverId);
-   updateOnlineUrl.append("&netFlag=20");
+   updateOnlineUrl.append("&netFlag=1");
    cout<<"time url:"<<updateOnlineUrl<<endl;
 
    //录制服务在线状态定时上传
@@ -459,7 +459,9 @@ int startServer(void)
     APIStr = config_file.GetConfigName("APIStr");
     HttpAPIStr = config_file.GetConfigName("HttpAPIStr");
     LOGFOLDER  = config_file.GetConfigName("Logfolder");
-    ServerName = config_file.GetConfigName("ServerName");   
+    ServerName = config_file.GetConfigName("ServerName");
+    ServerNameAPIStr = config_file.GetConfigName("ServerNameAPI");
+    ServerCreateStr = config_file.GetConfigName("ServerCreateAPI");   
  
     main_ret = CreateLogFileDir(LOGFOLDER.c_str());
     if(0 != main_ret)
@@ -497,10 +499,10 @@ int startServer(void)
    //注册录制服务接口  
    url = IpPort;
    url.append(ServerCreate);
-   url.append("?serverName=");
+   url.append(ServerNameAPIStr);
    char *format = m_httpclient->UrlEncode(ServerName);
    url.append(format);
-   url.append("&serverType=LiveRecord&serverApi=192.168.1.206:");
+   url.append(ServerCreateStr);
    url.append(ServerPort);    
    url.append(APIStr);
    

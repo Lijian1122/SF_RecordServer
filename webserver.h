@@ -17,6 +17,9 @@ v 0.0.3
 v 0.0.4
 2019.05.23 添加配置文件
 2019.05.23 修改监控进程功能
+
+v 0.0.5
+2019.05.28 配置文件增加ServerCreate配置项
 ******************************************************/
 #ifndef WEBSERVER_H
 #define WEBSERVER_H
@@ -46,7 +49,7 @@ string updateOnlineUrl;  //更新录制在线Url
 string LOGFOLDER =  "./recordlog/";
 string ServerName = "LIVE录像01";*/
 
-string HttpAPIStr,updateOnlineUrl,LOGFOLDER,ServerName;
+string HttpAPIStr,updateOnlineUrl,LOGFOLDER,ServerName,ServerNameAPIStr, ServerCreateStr;
 
 //Http服务返回值枚举
 enum RESCODE{ 

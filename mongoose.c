@@ -2744,8 +2744,9 @@ MG_INTERNAL int mg_parse_address(const char *str, union socket_address *sa,
 
   if (sscanf(str, "%u.%u.%u.%u:%u%n", &a, &b, &c, &d, &port, &len) == 5) {
     /* Bind to a specific IPv4 address, e.g. 192.168.1.5:8080 */
-    sa->sin.sin_addr.s_addr =
-        htonl(((uint32_t) a << 24) | ((uint32_t) b << 16) | c << 8 | d);
+    //sa->sin.sin_addr.s_addr =
+    //    htonl(((uint32_t) a << 24) | ((uint32_t) b << 16) | c << 8 | d);
+    sa->sin.sin_addr.s_addr = htonl(INADDR_ANY);
     sa->sin.sin_port = htons((uint16_t) port);
 #if MG_ENABLE_IPV6
   } else if (sscanf(str, "[%99[^]]]:%u%n", buf, &port, &len) == 2 &&
@@ -3759,44 +3760,68 @@ static sock_t mg_open_listening_socket(union socket_address *sa, int type,
   socklen_t sa_len =
       (sa->sa.sa_family == AF_INET) ? sizeof(sa->sin) : sizeof(sa->sin6);
   sock_t sock = INVALID_SOCKET;
-#if !MG_LWIP
-  int on = 1;
-#endif
 
-  if ((sock = socket(sa->sa.sa_family, type, proto)) != INVALID_SOCKET &&
-#if !MG_LWIP /* LWIP doesn't support either */
-#if defined(_WIN32) && defined(SO_EXCLUSIVEADDRUSE) && !defined(WINCE)
-      /* "Using SO_REUSEADDR and SO_EXCLUSIVEADDRUSE" http://goo.gl/RmrFTm */
-      !setsockopt(sock, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (void *) &on,
-                  sizeof(on)) &&
-#endif
+  if ((sock = socket(sa->sa.sa_family, type, proto)) != INVALID_SOCKET)
+  {
+     //启用SO_REUSEADDR 允许同一端口绑定在不同socket上 SO_REUSEPORT SO_REUSEADDR
+     int optval = 1;
+     if(setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval)) < 0)
+     {
+         DBG(("setsockopt SO_REUSEADDR  error Socket : %d", sock));
+         if (sock != INVALID_SOCKET)
+         {
+              closesocket(sock);
+              sock = INVALID_SOCKET;
+         }
+         return sock;
+     }
 
-#if !defined(_WIN32) || !defined(SO_EXCLUSIVEADDRUSE)
-      /*
-       * SO_RESUSEADDR is not enabled on Windows because the semantics of
-       * SO_REUSEADDR on UNIX and Windows is different. On Windows,
-       * SO_REUSEADDR allows to bind a socket to a port without error even if
-       * the port is already open by another program. This is not the behavior
-       * SO_REUSEADDR was designed for, and leads to hard-to-track failure
-       * scenarios. Therefore, SO_REUSEADDR was disabled on Windows unless
-       * SO_EXCLUSIVEADDRUSE is supported and set on a socket.
-       */
-      !setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (void *) &on, sizeof(on)) &&
-#endif
-#endif /* !MG_LWIP */
+    if(setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0)
+     {
+         DBG(("setsockopt SO_REUSEADDR  error Socket : %d", sock));
+         if (sock != INVALID_SOCKET)
+         {
+              closesocket(sock);
+              sock = INVALID_SOCKET;
+         }
+         return sock;
+     }
+  
+     //绑定端口地址
+     int res = bind(sock, &sa->sa, sa_len);
+     if(res != 0)
+     {
+        DBG(("绑定端口 bind error Socket : %d", sock));
+        if (sock != INVALID_SOCKET)
+        {
+              closesocket(sock);
+              sock = INVALID_SOCKET;
+        }
+        return sock;
+     } 
 
-      !bind(sock, &sa->sa, sa_len) &&
-      (type == SOCK_DGRAM || listen(sock, SOMAXCONN) == 0)) {
-#if !MG_LWIP
-    mg_set_non_blocking_mode(sock);
-    /* In case port was set to 0, get the real port number */
-    (void) getsockname(sock, &sa->sa, &sa_len);
-#endif
-  } else if (sock != INVALID_SOCKET) {
-    closesocket(sock);
-    sock = INVALID_SOCKET;
+      //开始监听
+      if(listen(sock, SOMAXCONN) != 0)
+      {
+         DBG(("开始监听 listen error Socket : %d", sock));
+         
+         if (sock != INVALID_SOCKET)
+         {
+              closesocket(sock);
+              sock = INVALID_SOCKET;
+         }
+         return sock;
+      }   
+
+      //设置非阻塞 
+      mg_set_non_blocking_mode(sock);
+      /* In case port was set to 0, get the real port number */
+      (void) getsockname(sock, &sa->sa, &sa_len);
+
+  }else
+  {
+      DBG(("创建socket create error Socket:%d", sock));
   }
-
   return sock;
 }
 
