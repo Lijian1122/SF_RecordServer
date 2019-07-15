@@ -389,7 +389,7 @@ int RecordSaveRunnable::BrokenlineReconnection(int re_Connects)
 		 
 	      if(aacDataLen == 0 || h264DataLen == 0 || re_Connects > 1)
 	      {
-                   LOG(ERROR) << "上次录制的数据 AAC:"<< aacDataLen<<"  h264:"<< h264DataLen <<"  liveId:"<<m_recordID;
+                   LOG(ERROR) << "上次录制的数据 AAC:"<< aacDataLen<<"h264:"<< h264DataLen<<m_recordID;
 			
                    //识别到录制空文件，删除文件
                    remove(aacfileName.c_str());
@@ -503,10 +503,10 @@ begin:
           }
 		   
           //写入缓冲区		   
-          m_ret = m_cycleBuffer->write(m_buf,nRead);
+		  m_ret = m_cycleBuffer->write(m_buf,nRead);
 		  
-          if(0 != m_ret) //返回值不为0,写入异常
-          {
+		  if(0 != m_ret) //返回值不为0,写入异常
+		  {
 			 if(1 == m_ret)
 		     {
 			    LOG(ERROR) << " Rtmp数据缓冲区空间使用率已大于0.5  直播ID:"<<m_recordID; 
@@ -515,7 +515,7 @@ begin:
 		     {
 			    LOG(ERROR) << " Rtmp数据缓冲区空间不足  "<<nRead<<"字节未写入 直播ID:"<< m_recordID;
 		     }  
-	  }	 
+		  }	 
      }else 
      {  
 
@@ -545,78 +545,55 @@ begin:
 		 std::string url;
                  m_ret = ParseJsonInfo(resData,resCodeInfo,liveinfo,url,URL_TYPE::SELECT_LIVFLAG);
       
-                 int liveFlag = atoi(liveinfo.c_str());
-                 LOG(INFO) <<"查询直播   直播状态:"<<liveinfo<< "  ret:"<<m_ret<<"   liveFlag:"<<liveFlag<<"  直播ID:"<<m_recordID;
+                 int recordFlag = atoi(liveinfo.c_str());
+                 LOG(INFO) <<"查询直播   直播状态:"<<liveinfo<< "  ret:"<<m_ret<<"   recordFlag:"<<recordFlag<<"  直播ID:"<<m_recordID;
                           
-                 if(LIVE_FLAG::LIVE_START == liveFlag || LIVE_FLAG::LIVE_UPDATE == liveFlag)  //查询到还在直播中1或3
+                 if(RECORD_FLAG::RECORD_START == recordFlag || RECORD_FLAG::RECORD_UPDATE == recordFlag)  //查询到还在直播中1或3
                  {
-                        //获取liveflag更新的时间戳 
-                        int FlagTime = atoi(liveFlagTime.c_str());
-		        int CurrentTime = atoi(currentTimestamp.c_str());
+                     //获取liveflag更新的时间戳 
+                     int FlagTime = atoi(liveFlagTime.c_str());
+		     int CurrentTime = atoi(currentTimestamp.c_str());
 					 
-                        LOG(ERROR)<<"查询到的时间戳 liveFlagTime:"<<FlagTime<<"  currentTimestamp:"<<CurrentTime<<"  直播ID:"<<m_recordID;
-					 
-		         //liveflag已经超过60s未更新,默认客户端掉线，停止录制任务
-		        if(CurrentTime - FlagTime > 60)
-		        {
-			       save_httpflag = false;    
-                               runningp = 0;
-						
-			       //默认为客户端推流掉线，上传录制状态
-                               m_ret = UpdataRecordflag(recive_http,RECORD_FLAG::RECORD_CLIENT_ERROR);
-					
-			       LOG(ERROR) <<"根据时间戳，检测到到直播停止或直播中断  直播ID:"<<m_recordID;
-                               break;
-	                }
-                            re_Connects++;		 
-		            m_ret = BrokenlineReconnection(re_Connects);
-		            if(0 == m_ret)
-		            {					
-                                goto begin; //开始重连 			
-		            }else
-		            {
-                                break;	//重连超过三次,停止录制任务					 
-		            }    
-                }else if(LIVE_FLAG::LIVE_STOP == liveFlag) //查询到已经停止直播
-                {
-			   save_httpflag = false;    
-                           runningp = 0;
-                 
-			   LOG(ERROR) <<"查询到直播停止 liveFlag: "<<liveFlag <<"  直播ID:"<<m_recordID;
-                           m_ret = UpdataRecordflag(recive_http,RECORD_FLAG::RECORD_STOP);
-			   break;
-	        }else if(LIVE_FLAG::LIVE_CLIENT_ERROR == liveFlag)  //查询到客户端推流异常
-               {
-		           save_httpflag = false;    
-                           runningp = 0;
-                 
-			   LOG(ERROR) <<"查询到直播停止或直播中断 liveFlag: "<<liveFlag<<"  直播ID:"<<m_recordID;
-                           m_ret = UpdataRecordflag(recive_http,RECORD_FLAG::RECORD_CLIENT_ERROR);	
-                           break;
-
-	       }else if(LIVE_FLAG::LIVE_SERVER_ERROR == liveFlag || LIVE_FLAG::LIVE_INIT == liveFlag) //查询到服务端拉流异常或为初始值
-               {                
-                           save_httpflag = false;    
-                           runningp = 0;
-		           LOG(ERROR) <<"查询到录制服务拉流异常 liveFlag:"<<liveFlag<<"  直播ID:"<<m_recordID;
-                           break;
-           			
-               }else if(LIVE_FLAG::LIVE_TIME_OUT == liveFlag) //查询到客户端直播超时
-               {
-		          save_httpflag = false;    
+                     LOG(ERROR)<<"查询到的时间戳 liveFlagTime:"<<FlagTime<<"  currentTimestamp:"<<CurrentTime<<"  直播ID:"<<m_recordID;
+		    
+                      //liveflag已经超过30s未更新,默认客户端掉线，停止录制任务
+		     if(CurrentTime - FlagTime > 60)
+		     {
+			  save_httpflag = false;    
                           runningp = 0;
-                 
-		          LOG(ERROR) <<"查询到直播停止或直播中断 liveFlag: "<<liveFlag<<"  直播ID:"<<m_recordID;
-                          m_ret = UpdataRecordflag(recive_http,RECORD_FLAG::RECORD_CLIENT_TIMEOUT);			
-                          break;	   
-	      }else  //检测到其他异常
-              {
-                         save_httpflag = false;    
-                         runningp = 0;			   
-		         LOG(ERROR) <<"检测到其他异常  liveFlag:"<<liveFlag<<"  直播ID:"<<m_recordID;
-		         break;
-              }
-	  	            
+                          //默认为客户端推流掉线，上传录制状态
+                          m_ret = UpdataRecordflag(recive_http,RECORD_FLAG::RECORD_CLIENT_ERROR);
+		
+			  LOG(ERROR) <<"根据时间戳，检测到直播中断 停止录制任务  直播ID:"<<m_recordID;
+                          break;
+	             }
+                     re_Connects++;		 
+		     m_ret = BrokenlineReconnection(re_Connects);
+		     if(0 == m_ret)
+		     {					
+                          goto begin; //开始重连 			
+		     }else
+		     {
+                          break;  //重连超过三次,停止录制任务					 
+		     }    
+                }else if(RECORD_FLAG::RECORD_CLIENT_ERROR == recordFlag) //查询到客户端推流异常
+                {    
+                    save_httpflag = false;    
+                    runningp = 0;
+                    
+                    m_ret = UpdataRecordflag(recive_http, RECORD_FLAG::RECORD_CLIENT_ERROR);
+					
+		    LOG(ERROR) <<"查询到客户端推流异常 停止录制任务  直播ID:"<<m_recordID;
+                    break;
+               }else if(RECORD_FLAG::RECORD_STOP == recordFlag) //查询到已经停止直播
+               {
+                   save_httpflag = false;
+	           runningp = 0;
+		   
+                   m_ret = UpdataRecordflag(recive_http,RECORD_FLAG::RECORD_STOP);
+                   LOG(ERROR) <<"查询到直播停止 停止录制任务 直播ID:"<<m_recordID;
+                   break;
+	       }  	            
            }else  //调用直播查询接口失败
            {
                    LOG(ERROR) << "直播查询失败 "<<"错误代号:"<<m_ret<<"  直播ID:"<<m_recordID;
@@ -631,7 +608,7 @@ begin:
 				   {
                        break;	//重连超过三次,停止录制任务					 
 				   }    
-           }    
+           }
       }else   
       {
            //rtmp连接断开
@@ -668,7 +645,7 @@ end:
    {
       LOG(INFO) << "RTMP连接准备重连!";
 	  re_Connects++;
-	  if(re_Connects > 4) //重连三次失败，结束拉流
+	  if(re_Connects > 3) //重连三次失败，结束拉流
 	  {
 		 LOG(ERROR) << "三次都没有连上Rtmp服务  直播ID:"<<m_recordID; 
 		 //上传录制状态,连不上rtmp服务
@@ -744,20 +721,19 @@ void *RecordSaveRunnable::rtmpSave_f()
 				  LOG(INFO) << "写缓存结束  直播ID: "<<m_recordID;				  
 				  break;		  
 			   }
-                           //LOG(INFO) << "写缓存死循环1111  直播ID: "<<m_recordID;
 			   continue;	  
 		   }
 		 
 		   //获取数据长度
 		   memcpy(&tagdataSize, tagHead_buf + 1, 3);
-                   tagdataSize = HTON24(tagdataSize);
+           tagdataSize = HTON24(tagdataSize);
            		  
-	           //tagdataSize大于TAG_BUFF_SIZE时 重新申请为原来的两倍内存
-	           if(tagdataSize + tagSize  >  TAG_BUFF_SIZE)
-	           {
+	       //tagdataSize大于TAG_BUFF_SIZE时 重新申请为原来的两倍内存
+	       if(tagdataSize + tagSize  >  TAG_BUFF_SIZE)
+	       {
 		        if(NULL != tagData_buf)
 		        {
-			    free(tagHead_buf);
+			        free(tagHead_buf);
 		            tagHead_buf = NULL;
 		        }				 		  
 		        TAG_BUFF_SIZE += TAG_BUFF_SIZE;
@@ -785,13 +761,12 @@ void *RecordSaveRunnable::rtmpSave_f()
 				  LOG(INFO) << "写缓存结束  直播ID: "<<m_recordID;				  
 				  break;		  
 			  }
-                          LOG(INFO) << "写缓存死循环2222  直播ID: "<<m_recordID;
 			  continue;
 		   }	    
 		    
 		  //解析四字节的TagSize长度
 		  memcpy(&readTagSize, tagData_buf + tagdataSize, tagSize);
-                  readTagSize = HTON32(readTagSize);
+          readTagSize = HTON32(readTagSize);
   
 		  if(readTagSize == 11 + tagdataSize)
 	      {
@@ -903,12 +878,11 @@ int RecordSaveRunnable::UpdataRecordflag(LibcurClient *http_client ,int flag)
     if(0 != m_ret)
     {
         LOG(ERROR)<<"调用更新录制状态接口失败  直播ID"<<m_recordID;
-	return m_ret;
+	    return m_ret;
     }
     std::string resData = http_client->GetResdata();
 
-    LOG(INFO)<<"上传录制状态  resData:"<<resData<<" flag:"<<flag;
-	
+    //LOG(ERROR)<<"定时上传录制状态 Url:"<<updataUrl;	
     m_ret = ParseJsonInfo(resData,resCodeInfo,liveinfo,url,URL_TYPE::UPDATA_RECORDFLAG);
 
     return m_ret;

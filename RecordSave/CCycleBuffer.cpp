@@ -69,15 +69,15 @@ int CCycleBuffer::write(char* buf,int count)
 	}else //缓冲区剩余空间不足
 	{
 	    struct timespec outtime;
-        struct timeval now;
-        gettimeofday(&now, NULL);
-        outtime.tv_sec = now.tv_sec;
-        outtime.tv_nsec = now.tv_usec*1000 + 3 * 1000 * 1000;
-        outtime.tv_sec += outtime.tv_nsec/(1000 * 1000 *1000);
-        outtime.tv_nsec %= (1000 * 1000 *1000);
+            struct timeval now;
+            gettimeofday(&now, NULL);
+            outtime.tv_sec = now.tv_sec;
+            outtime.tv_nsec = now.tv_usec*1000 + 3 * 1000 * 1000;
+            outtime.tv_sec += outtime.tv_nsec/(1000 * 1000 *1000);
+            outtime.tv_nsec %= (1000 * 1000 *1000);
 			          
-        pthread_cond_timedwait(&notfull, &mutex ,&outtime);  			      		
-		resCode = 2;	   
+            pthread_cond_timedwait(&notfull, &mutex ,&outtime);  			      		
+	    resCode = 2;	   
 	}
 
     pthread_mutex_unlock(&mutex);    
