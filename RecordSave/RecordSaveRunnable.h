@@ -39,6 +39,7 @@ v0.0.5
 #define UN_ABS(a,b) (a>=b?a-b:b-a)
 
 extern string ServerPort,FILEFOLDER,IpPort,APIStr,record_serverId,ServerCreate,ServerDelete,ServerSelect,ServerUpdate,liveUpdate,liveSelect,liveUpload;
+extern int aacTagCount;
 
 using json = nlohmann::json;
 
@@ -133,8 +134,8 @@ public:
 
 protected:
 
-        //读线程
-        static void *Recive_fun(void* arg);
+    //读线程
+    static void *Recive_fun(void* arg);
 	void *rtmpRecive_f();
 	
 	//写线程
@@ -142,24 +143,24 @@ protected:
 	void *rtmpSave_f();
 	
 	//重连rtmp初始化
-        int BrokenlineReconnectionInit(RTMP *m_pRtmp, int re_Connects);
+    int BrokenlineReconnectionInit(RTMP *m_pRtmp, int re_Connects);
 	
 	//重连rtmp,如重连大于三次，结束录制任务 否则继续重连
-       int BrokenlineReconnection(int re_Connects);
+    int BrokenlineReconnection(int re_Connects);
 	
 private:
 
     //获取完整一个Tag数据写文件
-    int WriteFile(char *tagHead_buf, char *tagData_buf, int tagdataSize);
+    int WriteFile(const char *tagHead_buf, const char *tagData_buf, int tagdataSize);
 
     //h264数据写入h264文件
-    int Write264data(char *timebuff,char *packetBody, int datasize);
+    int Write264data(const char *timebuff,const char *packetBody, int datasize);
 
     //aac数据写入aac文件
-    int WriteAac(char *timebuff ,char *packetBody, int datasize);
+    int WriteAac(const char *timebuff ,const char *packetBody, int datasize);
 
     //自定义白板数据写入json文件
-    bool WriteExtractDefine(char *timebuff ,char *packetBody,  int datasize);
+    bool WriteExtractDefine(const char *timebuff ,const char *packetBody,  int datasize);
 
     //新建文件及文件夹
     int CreateFileDir(const char *sPathName);
@@ -176,10 +177,10 @@ private:
 	
      //写线程结束上传录制完成状态
     void UploadRecordStopFlag();
-	
+
 private:
 
-   /*录制ID*/
+   /*录制直播ID*/
    string m_recordID;
 
    /*音频解析所需要数据结构*/
@@ -220,7 +221,6 @@ private:
    /*LibcurClient对象*/
    LibcurClient *recive_http; 
    LibcurClient *save_http;
-   LibcurClient *upload_http;
 
    /*是否允许写线程上传录制状态flag*/
    bool save_httpflag;  
@@ -260,6 +260,9 @@ private:
    /*查询到直播状态的时间戳*/
    string liveFlagTime;
    string currentTimestamp;
+
+   /*rtmp读数据超时标志位*/
+   bool rtmpReadTimeout;
 };
 
 #endif // RECORDSAVERUNNABLE_H

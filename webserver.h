@@ -37,6 +37,7 @@ v 0.0.5
 #include "RecordSave/RecordSaveRunnable.h"
 
 extern string ServerPort, FILEFOLDER,IpPort,APIStr, record_serverId,ServerCreate,ServerDelete,ServerSelect,ServerUpdate,liveUpdate,liveSelect,liveUpload;
+extern int aacTagCount;
 
 int httpSev_flag = 1; //http服务线程退出标志
 int recordMange_flag = 1; //任务管理线程退出标志
@@ -73,7 +74,6 @@ enum RECORDCMD{
     STOP   //停止录制
 };
 
-
 //Http接口返回值类型
 enum PARSE_TYPE{ 
    GETAPI = 0,
@@ -93,7 +93,6 @@ CommonList *LiveParmList, *RecordSaveList, *DeleteRecordList;
 
 //读取配置文件对象
 CConfigFileReader config_file("server.conf");
-
 
 //线程对象
 pthread_t recordManage_t;

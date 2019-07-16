@@ -41,4 +41,7 @@ extern string liveUpdate;
 extern string liveSelect;
 extern string liveUpload;
 
+//aacTag 计数
+extern int aacTagCount;
+
 #endif

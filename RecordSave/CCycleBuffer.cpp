@@ -9,6 +9,7 @@ CCycleBuffer::CCycleBuffer(int size)
      m_nReadPos =0; 
      m_nWritePos =0; 
      m_pBuf = new char[m_nBufSize];
+     memset(m_pBuf,0,m_nBufSize);
     
      m_usedSize = 0;
 	
@@ -69,15 +70,15 @@ int CCycleBuffer::write(char* buf,int count)
 	}else //缓冲区剩余空间不足
 	{
 	    struct timespec outtime;
-            struct timeval now;
-            gettimeofday(&now, NULL);
-            outtime.tv_sec = now.tv_sec;
-            outtime.tv_nsec = now.tv_usec*1000 + 3 * 1000 * 1000;
-            outtime.tv_sec += outtime.tv_nsec/(1000 * 1000 *1000);
-            outtime.tv_nsec %= (1000 * 1000 *1000);
+	    struct timeval now;
+	    gettimeofday(&now, NULL);
+	    outtime.tv_sec = now.tv_sec;
+	    outtime.tv_nsec = now.tv_usec*1000 + 3 * 1000 * 1000;
+	    outtime.tv_sec += outtime.tv_nsec/(1000 * 1000 *1000);
+	    outtime.tv_nsec %= (1000 * 1000 *1000);
 			          
-            pthread_cond_timedwait(&notfull, &mutex ,&outtime);  			      		
-	    resCode = 2;	   
+	    pthread_cond_timedwait(&notfull, &mutex ,&outtime);
+	    resCode = 2;
 	}
 
     pthread_mutex_unlock(&mutex);    
@@ -86,13 +87,13 @@ int CCycleBuffer::write(char* buf,int count)
 } 
 	
 /*******从缓冲区读数据*******/
-int CCycleBuffer::read(char* buf,int count) 
+int CCycleBuffer::read(char* buf,int count, bool resetFlag)
 { 
 
 	/*resCode 返回值 
 	1. 正常读取 返回0;
 	2. 缓冲区不为空，但数据不足,返回1;
-        3. 缓冲区为空，返回2*/
+	3. 缓冲区为空，返回2*/
 	
     pthread_mutex_lock(&mutex);
 	int leftcount = 0;
@@ -121,27 +122,39 @@ int CCycleBuffer::read(char* buf,int count)
          m_usedSize -= 	count;	
 	}else
 	{
-    
-         if(m_usedSize  == 0) //缓冲区为空，等待非空信号
+         if(m_usedSize == 0) //缓冲区为空，等待非空信号
 	     {
-		     struct timespec outtime;
-             struct timeval now;
-	         gettimeofday(&now, NULL);
-             outtime.tv_sec = now.tv_sec;
-             outtime.tv_nsec = now.tv_usec*1000 + 3 * 1000 * 1000;
-             outtime.tv_sec += outtime.tv_nsec/(1000 * 1000 *1000);
-             outtime.tv_nsec %= (1000 * 1000 *1000);   
-	         int m_ret = pthread_cond_timedwait(&notempty, &mutex ,&outtime); 
-                 resCode = 2;
+	         resCode = 2;
+	     }else
+	     {
+			 resCode = 1;
+	     }
 
-	    }else
-	    {    
-			resCode = 1;	 
-	    }  		
-	}
- 
-    pthread_cond_signal(&notfull);		
+		 LOG(ERROR) <<"缓冲区数据不足 m_usedSize:"<<m_usedSize<<"  count:"<<count;
+		 
+	     //rtmp异常读不到数据,重初始化缓冲区
+	     if(resetFlag)
+         {
+			 LOG(ERROR) <<"rtmp读数据超时，读不到一个Tag 重置缓冲区, 等待下次重连  m_usedSize:"<<m_usedSize<<"  count:"<<count;
+			 m_nBufSize = size;
+			 m_nReadPos =0;
+			 m_nWritePos =0;
+			 memset(m_pBuf,0,m_nBufSize);
+			 m_usedSize = 0;
+         }
+		 
+         struct timespec outtime;
+         struct timeval now;
+         gettimeofday(&now, NULL);
+         outtime.tv_sec = now.tv_sec;
+         outtime.tv_nsec = now.tv_usec*1000 + 3 * 1000 * 1000;
+         outtime.tv_sec += outtime.tv_nsec/(1000 * 1000 *1000);
+         outtime.tv_nsec %= (1000 * 1000 *1000);
+         int m_ret = pthread_cond_timedwait(&notempty, &mutex ,&outtime);
+    }
+
 	pthread_mutex_unlock(&mutex);
+	pthread_cond_signal(&notfull);
 	return resCode;   
 }
 

@@ -2,25 +2,19 @@
 
 RecordSaveRunnable::RecordSaveRunnable(const char *pdata)
 {
- 
      m_recordID = pdata;
-
-     recive_http = new LibcurClient;
-
-     save_http = new LibcurClient;
-
-     upload_http= new LibcurClient;
-
-     save_httpflag = true; 
+     save_httpflag = true;
 
      recive_httpflag = 0;
-
+     m_ret = 0;
      iHasAudioSpecificConfig = 0;
      ah = {0};
-     ad = {0}; 
-	 
-     m_cycleBuffer = new CCycleBuffer(BUFFER_SIZE);
-	
+     ad = {0};
+
+     //recive_http = new LibcurClient;
+     //save_http = new LibcurClient;
+     //m_cycleBuffer = new CCycleBuffer(BUFFER_SIZE);
+
      runningp = 1;  
      runningc = 1;   
 
@@ -42,6 +36,9 @@ RecordSaveRunnable::RecordSaveRunnable(const char *pdata)
 
      //初始化http停止录制命令状态
      stopflag = false;
+
+     //rtmp读数据超时状态
+     rtmpReadTimeout = false;
 }
 
 
@@ -71,17 +68,20 @@ int RecordSaveRunnable::ParseJsonInfo(std::string &jsonStr ,std::string &resCode
 					 json liveinfoObj = m_object.at("live_info");
 					 liveinfo = liveinfoObj.value("liveFlag", "oops");
 					 pullUrl = liveinfoObj.value("pullUrl", "oops");		
-				         LOG(INFO)<<"返回http 直播信息查询  liveFlag:"<<liveinfo <<"  pullUrl:"<<pullUrl<<"  直播ID:"<<m_recordID;
+					 LOG(INFO)<<"返回http 直播信息查询  liveFlag:"<<liveinfo <<"  pullUrl:"<<pullUrl<<"  直播ID:"<<m_recordID;
 					 break;
 				 }
 				 case URL_TYPE::SELECT_LIVFLAG:  //查询直播状态
 	             {
 					 json liveinfoObj = m_object.at("live_info");
 					 liveinfo = liveinfoObj.value("liveFlag", "oops");
-                                         liveFlagTime = liveinfoObj.value("liveFlagTime", "oops");
-                                         currentTimestamp = m_object.value("timestamp", "oops");
+
+					 liveFlagTime = liveinfoObj.value("liveFlagTime", "oops");
+					 currentTimestamp = m_object.value("timestamp", "oops");
 					 break;
 				 }
+				 default:
+				     break;
 			 }
          }else
          {  
@@ -104,69 +104,87 @@ int RecordSaveRunnable::ParseJsonInfo(std::string &jsonStr ,std::string &resCode
 //启动录制任务
 int RecordSaveRunnable::StartRecord()
 {
-      //查询直播信息及拉流URL
-      std::string resData ,resCodeInfo, liveinfo;
-      string urlStr = IpPort;
+    //创建http对象
+    recive_http = new LibcurClient;
+    if(!recive_http){
+        LOG(ERROR) << "创建http对象 recive_http 失败   ret:"<<m_ret<<" 直播ID:"<<m_recordID;
+        m_ret = -1;
+        return m_ret;
+    }
+    save_http = new LibcurClient;
+    if(!save_http)
+    {
+        LOG(ERROR) << "创建http对象 save_http 失败   ret:"<<m_ret<<" 直播ID:"<<m_recordID;
+        m_ret = -2;
+        return m_ret;
+    }
 
-      urlStr.append(liveSelect).append("?liveId=").append(m_recordID);
-      urlStr.append("&userType=1");
-      urlStr.append("&operateId=123");
+    //创建环形缓冲区对象
+    m_cycleBuffer = new CCycleBuffer(BUFFER_SIZE);
+    if(!m_cycleBuffer)
+    {
+        m_ret = -3;
+        LOG(ERROR) << "创建缓冲区对象 m_cycleBuffer 失败   ret:"<<m_ret<<" 直播ID:"<<m_recordID;
+        return m_ret;
+    }
 
-      LOG(ERROR)<<"select LiveInfoUrl:"<<urlStr<<"  直播ID:"<<m_recordID;
-      int m_ret = recive_http->HttpGetData(urlStr.c_str());
+    //查询直播信息及拉流URL
+    std::string resData ,resCodeInfo, liveinfo;
+    string urlStr = IpPort;
 
-      if(0 == m_ret)
-      {
+    urlStr.append(liveSelect).append("?liveId=").append(m_recordID);
+    urlStr.append("&userType=1");
+    urlStr.append("&operateId=123");
+
+    LOG(ERROR)<<"select LiveInfoUrl:"<<urlStr<<"  直播ID:"<<m_recordID;
+    m_ret = recive_http->HttpGetData(urlStr.c_str());
+
+    if(0 == m_ret)
+    {
          resData = recive_http->GetResdata();
          if(0 != ParseJsonInfo(resData ,resCodeInfo ,liveinfo ,m_pullUrl ,URL_TYPE::SELECT_LIVEURL))
          {
-            LOG(ERROR) << "获取直播信息失败   ret:"<<m_ret<<" 直播ID:"<<m_recordID;
+            LOG(ERROR) << "获取直播信息失败   ret:"<<m_ret<<"  直播ID:"<<m_recordID;
             m_ret = 1;
             return m_ret;
          }
-      }else
-      {              
-         LOG(ERROR) << "调用直播信息查询接口失败:"<<m_ret<<" 直播ID:"<<m_recordID;
+    }else {
+         LOG(ERROR) << "调用直播信息查询接口失败:"<<m_ret<<"   直播ID:"<<m_recordID;
          return m_ret;
-      }
+    }
 
-      //新建文件,同时把直播信息写入json文件
-      int ret = CreateFile();  
-
-      if(0 != ret)
-      {
+    //新建文件,同时把直播信息写入json文件
+    m_ret = CreateFile();
+    if(0 != m_ret)
+    {
          LOG(ERROR) << "新建文件失败  ret:"<<ret<<"  直播ID:"<<m_recordID;
-         return ret;
-      }
+         return m_ret;
+    }
 
-      ret = pthread_create(&producter_t, NULL, Recive_fun, (void *)this);
-      if(0 != ret)
-      {
+    m_ret = pthread_create(&producter_t, NULL, Recive_fun, (void *)this);
+    if(0 != m_ret)
+    {
          LOG(ERROR) << "创建读线程失败  ret:"<<ret<<"   直播ID:"<<m_recordID;
-         return ret;
-      }
+         return m_ret;
+    }
 
-      ret = pthread_create(&consumer_t, NULL, Save_fun,  (void *)this);
-      if(0 != ret)
-      {
-      	  runningp = 0;
-      	  pthread_join(producter_t,NULL);
-          LOG(ERROR) << "创建写线程失败  ret:"<<ret<<"  直播ID:"<<m_recordID;
-          return ret;
-      }
+    m_ret = pthread_create(&consumer_t, NULL, Save_fun,  (void *)this);
+    if(0 != m_ret)
+    {
+        runningp = 0;
+        pthread_join(producter_t,NULL);
+        LOG(ERROR) << "创建写线程失败  ret:"<<ret<<"  直播ID:"<<m_recordID;
+        return ret;
+    }
 
-      LOG(INFO) << "已启动录制读写线程  直播ID:"<<m_recordID;
-       
-      return ret;
+    LOG(INFO) << "已启动录制读写线程  直播ID:"<<m_recordID;
+    return m_ret;
 } 
 
 //结束录制任务
 int RecordSaveRunnable::StopRecord()
 {
-      //runningp = 0;
-
       int resCode = pthread_join(producter_t,NULL);
-
       if(0 != resCode)
       {
           LOG(ERROR) << "销毁读线程失败  ret:"<<resCode<<"  直播ID:"<<m_recordID;
@@ -226,7 +244,7 @@ int RecordSaveRunnable::CreateFileDir(const char *sPathName)
             {                     
               if(mkdir(DirName, 0755)==-1)  
               {   
-		  LOG(ERROR) << "创建录制文件夹失败  直播ID:"<<m_recordID;
+		          LOG(ERROR) << "创建录制文件夹失败  直播ID:"<<m_recordID;
                   return -1;   
               }       
             }  
@@ -291,7 +309,6 @@ int RecordSaveRunnable::CreateFile()
      //printf("文件名: %s %s %s \n", aFileStr, vFileStr, wFileStr);
      LOG(INFO) << "文件名: "<<aFileStr<<"  "<<vFileStr<<"  "<<wFileStr<<"  "<<flvStr;
 
-     
      afile = fopen(aFileStr,"ab+");
      if(NULL == afile)
      {
@@ -316,11 +333,6 @@ int RecordSaveRunnable::CreateFile()
        return ret;
     }
 
-    /*if(!resData.empty())
-    {
-       fwrite(resData.c_str(), 1, resData.size(), wfile);
-    }*/
-
     flvfile = fopen(flvStr,"ab+");
     if(NULL == flvfile)
     {
@@ -328,7 +340,7 @@ int RecordSaveRunnable::CreateFile()
        LOG(ERROR)<<" 打开flv文件失败  ret:"<<ret<<"  reason:"<<strerror(ret)<<"  直播ID:"<<m_recordID;;
        return ret;
     }
-   
+
     LOG(INFO) << "打开所有文件成功  直播ID:"<<m_recordID;
     return ret;
 }
@@ -353,9 +365,8 @@ int RecordSaveRunnable::BrokenlineReconnectionInit(RTMP *m_pRtmp ,int reConntion
      }
 	 
      aacTagNum = 0;
-
-     firstflag = true;  
-  
+     firstflag = true;
+     rtmpReadTimeout = false;
      int ret = CreateFile();
 
      if(0 != ret)
@@ -373,50 +384,50 @@ int RecordSaveRunnable::BrokenlineReconnection(int re_Connects)
 	int ret = 0;
 	if(re_Connects < 4)
 	{
-	      LOG(ERROR) << "准备重连 直播ID:"<<m_recordID;  
-
-              //检测录制的音频 视频文件大小如果为0，删除录制的文件
-              fseek(afile,0L,SEEK_END); /* 定位到文件末尾 */
-              int aacDataLen=ftell(afile); /*得到文件大小*/
+	      LOG(ERROR) << "准备重连 直播ID:"<<m_recordID<<" re_Connects:"<<re_Connects;
+	      //检测录制的音频 视频文件大小如果为0，删除录制的文件
+	      fseek(afile,0L,SEEK_END); /* 定位到文件末尾 */
+	      int aacDataLen=ftell(afile); /*得到文件大小*/
 		 
 	      fseek(vfile,0L,SEEK_END); /* 定位到文件末尾 */
-              int h264DataLen=ftell(vfile); /*得到文件大小*/
+	      int h264DataLen=ftell(vfile); /*得到文件大小*/
 		  
 	      fclose(afile);
-              fclose(vfile);
-              fclose(wfile);
-              fclose(flvfile);
+	      fclose(vfile);
+	      fclose(wfile);
+	      fclose(flvfile);
 		 
 	      if(aacDataLen == 0 || h264DataLen == 0 || re_Connects > 1)
 	      {
-                   LOG(ERROR) << "上次录制的数据 AAC:"<< aacDataLen<<"  h264:"<< h264DataLen <<"  liveId:"<<m_recordID;
+	          LOG(ERROR) << "上次录制的数据 AAC:"<< aacDataLen<<"  h264:"<< h264DataLen <<"  liveId:"<<m_recordID;
 			
-                   //识别到录制空文件，删除文件
-                   remove(aacfileName.c_str());
-                   remove(h264fileName.c_str());
-                   remove(whitefileName.c_str());
-                   remove(flvfileName.c_str());
-	     }  
-		
-             //重连初始化
-             ret = BrokenlineReconnectionInit(m_pRtmp,re_Connects);
-		
+	          //识别到录制空文件，删除文件
+	          remove(aacfileName.c_str());
+	          remove(h264fileName.c_str());
+	          remove(whitefileName.c_str());
+	          remove(flvfileName.c_str());
+	      }
+	      //重连初始化
+	      ret = BrokenlineReconnectionInit(m_pRtmp,re_Connects);
+	      if(ret ! = 0)
+          {
+              LOG(ERROR) << "重连初始化失败 "<<"  liveId:"<<m_recordID<<" re_Connects:"<<re_Connects;
+          }
 	}else
 	{
 	   LOG(ERROR) << "重连次数超过三次，停止录制任务 直播ID:"<<m_recordID;
 
-           //重连失败，删除空文件
-           remove(aacfileName.c_str());
-           remove(h264fileName.c_str());
-           remove(whitefileName.c_str());
-           remove(flvfileName.c_str());
+	   //重连失败，删除空文件
+	   remove(aacfileName.c_str());
+	   remove(h264fileName.c_str());
+	   remove(whitefileName.c_str());
+	   remove(flvfileName.c_str());
                       
-           save_httpflag = false;
-           runningp = 0;
+	   save_httpflag = false;
+	   runningp = 0;
        
 	   //上传录制状态
-           m_ret = UpdataRecordflag(recive_http, RECORD_FLAG::RECORD_CONNECT_SERVER_ERROR);
-	
+	   m_ret = UpdataRecordflag(recive_http, RECORD_FLAG::RECORD_CONNECT_SERVER_ERROR);
 	   ret = 1;
 	}	
 	return ret;
@@ -448,12 +459,11 @@ void *RecordSaveRunnable::rtmpRecive_f()
     recive_httpflag = 0;
     int m_ret = UpdataRecordflag(recive_http,RECORD_FLAG::RECORD_START);
  
-begin: 
-
+begin:
      m_pRtmp = RTMP_Alloc();    
      RTMP_Init(m_pRtmp);
      m_pRtmp->Link.timeout = 30;
-   
+
      LOG(INFO) << "开始解析录制  rtmp:"<<m_pullUrl<<"  直播ID:"<<m_recordID;
 
      if(!RTMP_SetupURL(m_pRtmp,(char*)m_pullUrl.c_str()))
@@ -495,11 +505,11 @@ begin:
 		  char *m_buf = buf; 
 		  
           //第一次连RTMP时，除去FLV头
-	  if(firstflag)
+	      if(firstflag)
           {
-            m_buf = m_buf+13;
-	        nRead = nRead -13;
-            firstflag= false;
+             m_buf = m_buf+13;
+	         nRead = nRead -13;
+             firstflag= false;
           }
 		   
           //写入缓冲区		   
@@ -517,9 +527,8 @@ begin:
 		     }  
 	  }	 
      }else 
-     {  
-
-         //rtmp读不到数据,且收到停止录制命令,停止读取数据
+     {
+           //rtmp读不到数据,且收到停止录制命令,停止读取数据
         if(stopflag)
         {
                 LOG(ERROR) << "rtmp读不到数据,且收到录制停止命令 直播ID:"<<m_recordID;
@@ -528,7 +537,9 @@ begin:
         }
         //rtmp读数据超时
         if(RTMP_IsTimedout(m_pRtmp))
-        {   	     
+        {
+            rtmpReadTimeout = true;
+
             //直播查询,看直播是否中断         
             string urlStr =  IpPort;
             urlparm = liveSelect;
@@ -542,7 +553,7 @@ begin:
             { 
                  //获取解析查询返回值
                  std::string resData = recive_http->GetResdata();
-		 std::string url;
+		         std::string url;
                  m_ret = ParseJsonInfo(resData,resCodeInfo,liveinfo,url,URL_TYPE::SELECT_LIVFLAG);
       
                  int liveFlag = atoi(liveinfo.c_str());
@@ -586,13 +597,13 @@ begin:
                            m_ret = UpdataRecordflag(recive_http,RECORD_FLAG::RECORD_STOP);
 			   break;
 	        }else if(LIVE_FLAG::LIVE_CLIENT_ERROR == liveFlag)  //查询到客户端推流异常
-               {
+           {
 		           save_httpflag = false;    
-                           runningp = 0;
+		           runningp = 0;
                  
-			   LOG(ERROR) <<"查询到直播停止或直播中断 liveFlag: "<<liveFlag<<"  直播ID:"<<m_recordID;
-                           m_ret = UpdataRecordflag(recive_http,RECORD_FLAG::RECORD_CLIENT_ERROR);	
-                           break;
+			       LOG(ERROR) <<"查询到直播停止或直播中断 liveFlag: "<<liveFlag<<"  直播ID:"<<m_recordID;
+			       m_ret = UpdataRecordflag(recive_http,RECORD_FLAG::RECORD_CLIENT_ERROR);
+			       break;
 
 	       }else if(LIVE_FLAG::LIVE_SERVER_ERROR == liveFlag || LIVE_FLAG::LIVE_INIT == liveFlag) //查询到服务端拉流异常或为初始值
                {                
@@ -637,7 +648,8 @@ begin:
            //rtmp连接断开
            if(!RTMP_IsConnected(m_pRtmp))
            {
-                LOG(ERROR) <<"直播过程中rtmp连接中断 进行重连 直播ID:"<<m_recordID;         
+                rtmpReadTimeout = true;
+                LOG(ERROR) <<"直播过程中rtmp连接中断 进行重连 直播ID:"<<m_recordID<<" rtmpReadTimeout:"<<rtmpReadTimeout;
                 //rtmp重连
                 re_Connects++;			
                 m_ret = BrokenlineReconnection(re_Connects);
@@ -700,21 +712,20 @@ void *RecordSaveRunnable::Save_fun(void *arg)
 //写线程函数
 void *RecordSaveRunnable::rtmpSave_f()
 {
-	
 	//Tag头缓冲区
 	int tagHeadSize = 11;
-	char *tagHead_buf = (char*)malloc(tagHeadSize);
+	const char *tagHead_buf = (char*)malloc(tagHeadSize);
 	if(NULL == tagHead_buf)
-        {
+	{
            LOG(ERROR) << "tagHeadSize 申请内存失败  直播ID:"<<m_recordID;
            return  (void*)0;
-        }
+	}
 	memset(tagHead_buf, 0 ,tagHeadSize);
 	
     //Tag数据缓冲区
     int TAG_BUFF_SIZE = 5 * 1024 *1024;
     int tagdataSize = 0;
-    char *tagData_buf  = (char*)malloc(TAG_BUFF_SIZE);
+    const char *tagData_buf  = (char*)malloc(TAG_BUFF_SIZE);
     if(NULL == tagData_buf)
     {
        LOG(ERROR) << "tagData_buf 申请内存失败  直播ID:"<<m_recordID;
@@ -735,25 +746,25 @@ void *RecordSaveRunnable::rtmpSave_f()
         if(tagFlag) //开始解析Tag头
         {	
             ToRead = tagHeadSize;		
-		    m_ret = m_cycleBuffer->read(tagHead_buf,ToRead);
+		    m_ret = m_cycleBuffer->read(tagHead_buf,ToRead ,rtmpReadTimeout);
 		      
 		    if(0 != m_ret) //未读取到Tag头
-		    {
+            {
 			   if(stopRecordflag) //读线程已经结束，剩余数据不足一个Tag头
 			   {
 				  LOG(INFO) << "写缓存结束  直播ID: "<<m_recordID;				  
 				  break;		  
 			   }
-                           //LOG(INFO) << "写缓存死循环1111  直播ID: "<<m_recordID;
+			   LOG(INFO) << "写缓存死循环1111  直播ID: "<<m_recordID<<m_ret;
 			   continue;	  
 		   }
 		 
 		   //获取数据长度
 		   memcpy(&tagdataSize, tagHead_buf + 1, 3);
-                   tagdataSize = HTON24(tagdataSize);
-           		  
-	           //tagdataSize大于TAG_BUFF_SIZE时 重新申请为原来的两倍内存
-	           if(tagdataSize + tagSize  >  TAG_BUFF_SIZE)
+		    tagdataSize = HTON24(tagdataSize);
+
+		    //tagdataSize大于TAG_BUFF_SIZE时 重新申请为原来的两倍内存
+		    if(tagdataSize + tagSize  >  TAG_BUFF_SIZE)
 	           {
 		        if(NULL != tagData_buf)
 		        {
@@ -773,10 +784,9 @@ void *RecordSaveRunnable::rtmpSave_f()
            tagFlag = false;             
          
 		}else //开始解析帧数据
-	    {   
-          
+	    {
 		   ToRead = tagdataSize + tagSize;
-	       m_ret = m_cycleBuffer->read(tagData_buf,ToRead);  //去读取Tag数据 + 4字节TagSize
+	       m_ret = m_cycleBuffer->read(tagData_buf,ToRead, rtmpReadTimeout);  //去读取Tag数据 + 4字节TagSize
 		   
 		   if(0 != m_ret) //未读取到Tag数据
 		   {
@@ -785,13 +795,13 @@ void *RecordSaveRunnable::rtmpSave_f()
 				  LOG(INFO) << "写缓存结束  直播ID: "<<m_recordID;				  
 				  break;		  
 			  }
-                          LOG(INFO) << "写缓存死循环2222  直播ID: "<<m_recordID;
+			  LOG(INFO) << "写缓存死循环2222  直播ID: "<<m_recordID <<" m_ret:"<<m_ret;
 			  continue;
 		   }	    
 		    
 		  //解析四字节的TagSize长度
 		  memcpy(&readTagSize, tagData_buf + tagdataSize, tagSize);
-                  readTagSize = HTON32(readTagSize);
+          readTagSize = HTON32(readTagSize);
   
 		  if(readTagSize == 11 + tagdataSize)
 	      {
@@ -856,7 +866,7 @@ void RecordSaveRunnable::UploadRecordStopFlag()
 
         printf("delete url: %s\n", UrlStr.c_str());
         m_ret = save_http->HttpGetData(UrlStr.c_str()); 
-	if(0 != m_ret)
+	    if(0 != m_ret)
         {
            LOG(ERROR) << "调用删除录制任务接口失败   m_ret:"<<m_ret<<" 直播ID"<<m_recordID;      
         }
@@ -915,7 +925,7 @@ int RecordSaveRunnable::UpdataRecordflag(LibcurClient *http_client ,int flag)
 }
 
 //获取直播流tag数据进行写文件
-int RecordSaveRunnable::WriteFile(char *tagHead_buf,  char *tagData_buf, int tagdataSize)
+int RecordSaveRunnable::WriteFile(const char *tagHead_buf,  const char *tagData_buf, int tagdataSize)
 {          
          
     //时间戳指针
@@ -950,7 +960,7 @@ int RecordSaveRunnable::WriteFile(char *tagHead_buf,  char *tagData_buf, int tag
 }
 
 //白板数据写入json文件
-bool RecordSaveRunnable::WriteExtractDefine(char *timebuff, char *data, int tagdataSize)
+bool RecordSaveRunnable::WriteExtractDefine(const char *timebuff,const char *data, int tagdataSize)
 {
 
      bool bResult = true;
@@ -1007,7 +1017,7 @@ bool RecordSaveRunnable::WriteExtractDefine(char *timebuff, char *data, int tagd
 
 
 //aac数据写入aac文件
-int RecordSaveRunnable::WriteAac(char *timebuff ,char *data, int datasize)
+int RecordSaveRunnable::WriteAac(const char *timebuff ,const char *data, int datasize)
 {       
 	if(data[1] == 0x00)
 	{
@@ -1050,7 +1060,7 @@ int RecordSaveRunnable::WriteAac(char *timebuff ,char *data, int datasize)
    }
 
    aacTagNum++;
-   if(aacTagNum == 200)
+   if(aacTagNum == aacTagCount)
    {
       //调用直播状态接口,上传状态录制中
       if(save_httpflag)
@@ -1065,10 +1075,10 @@ int RecordSaveRunnable::WriteAac(char *timebuff ,char *data, int datasize)
 
 
 //264数据写入.h264文件
-int RecordSaveRunnable::Write264data(char *timebuff, char *packetBody, int datasize)
+int RecordSaveRunnable::Write264data(const char *timebuff, const char *packetBody, int datasize)
 {      
-     char flag[] = {0x00,0x00,0x00,0x01};
-     char *p = packetBody;
+     const char flag[] = {0x00,0x00,0x00,0x01};
+     const char *p = packetBody;
 
      char sizebuff[4] = {0};    
      int len = 0;
@@ -1097,7 +1107,7 @@ int RecordSaveRunnable::Write264data(char *timebuff, char *packetBody, int datas
 
           //写入长度
          buffSize = len + 4;
-	 sizebuff[0] = (buffSize & 0xff000000) >> 24;  
+	     sizebuff[0] = (buffSize & 0xff000000) >> 24;
          sizebuff[1] = (buffSize & 0x00ff0000) >> 16;  
          sizebuff[2] = (buffSize & 0x0000ff00) >> 8;  
          sizebuff[3] = (buffSize & 0x000000ff);  	
@@ -1132,7 +1142,7 @@ int RecordSaveRunnable::Write264data(char *timebuff, char *packetBody, int datas
          }*/
 
           //写入长度
-	 buffSize = len + 4;
+         buffSize = len + 4;
          memset(sizebuff,0 ,4);
          sizebuff[0] = (buffSize & 0xff000000) >> 24;  
          sizebuff[1] = (buffSize & 0x00ff0000) >> 16;  
@@ -1155,9 +1165,9 @@ int RecordSaveRunnable::Write264data(char *timebuff, char *packetBody, int datas
         }	
      }else
      {
-	 p = p + 9; 
+	     p = p + 9;
 
-	 /*if(4 != fwrite(flag, sizeof(char), 4, vfile))
+	     /*if(4 != fwrite(flag, sizeof(char), 4, vfile))
          {
             return  7;
          }*/
@@ -1215,11 +1225,5 @@ RecordSaveRunnable::~RecordSaveRunnable()
      {
         delete save_http;
         save_http = NULL;
-     }
-
-     if(NULL != upload_http)
-     {
-        delete upload_http;
-        upload_http = NULL;
      }
 }

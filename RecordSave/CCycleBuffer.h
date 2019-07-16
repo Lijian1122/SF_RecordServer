@@ -34,7 +34,7 @@ class CCycleBuffer
       int write(char* buf,int count);
 	 
       /*从缓冲区读数据*/
-      int read(char* buf,int count);
+      int read(char* buf,int count ,bool resetFlag);
 	 	
  private:
  
