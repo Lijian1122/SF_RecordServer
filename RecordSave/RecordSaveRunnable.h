@@ -151,16 +151,16 @@ protected:
 private:
 
     //获取完整一个Tag数据写文件
-    int WriteFile(const char *tagHead_buf, const char *tagData_buf, int tagdataSize);
+    int WriteFile(char *tagHead_buf, char *tagData_buf, int tagdataSize);
 
     //h264数据写入h264文件
-    int Write264data(const char *timebuff,const char *packetBody, int datasize);
+    int Write264data(char *timebuff,char *packetBody, int datasize);
 
     //aac数据写入aac文件
-    int WriteAac(const char *timebuff ,const char *packetBody, int datasize);
+    int WriteAac(char *timebuff ,char *packetBody, int datasize);
 
     //自定义白板数据写入json文件
-    bool WriteExtractDefine(const char *timebuff ,const char *packetBody,  int datasize);
+    bool WriteExtractDefine(char *timebuff ,char *packetBody,  int datasize);
 
     //新建文件及文件夹
     int CreateFileDir(const char *sPathName);

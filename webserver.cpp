@@ -455,10 +455,10 @@ int startServer(void)
     ServerCreateStr = config_file.GetConfigName("ServerCreateAPI");
 
     string aacTagCountStr = config_file.GetConfigName("AacTagCount");
-    aacTagCount = atoi(aacTagCountStr);
+    aacTagCount = atoi(aacTagCountStr.c_str());
 
-    if(!ServerPort || !FILEFOLDER || !IpPort || !APIStr || !HttpAPIStr || !LOGFOLDER ||
-        !ServerName || !ServerNameAPIStr || !ServerCreateStr || !aacTagCountStr)
+    if(ServerPort.empty() || FILEFOLDER.empty() || IpPort.empty() || APIStr.empty() || HttpAPIStr.empty() || LOGFOLDER.empty() ||
+        ServerName.empty() || ServerNameAPIStr.empty() || ServerCreateStr.empty() || aacTagCountStr.empty())
     {
         LOG(ERROR) << "获取配置文件字段为空  "<<"   main_ret:"<<main_ret;
         return main_ret ;

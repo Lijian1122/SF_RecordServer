@@ -9,17 +9,19 @@ CCycleBuffer::CCycleBuffer(int size)
      m_nReadPos =0; 
      m_nWritePos =0; 
      m_pBuf = new char[m_nBufSize];
-     memset(m_pBuf,0,m_nBufSize);
+     memset((char*)m_pBuf,0,m_nBufSize);
     
      m_usedSize = 0;
 	
      pthread_cond_init(&notempty, NULL);
      pthread_cond_init(&notfull, NULL);
      pthread_mutex_init(&mutex, NULL);
+
+    tagCount = 0;
 } 
 
 /*********向缓冲区写入数据*****/ 
-int CCycleBuffer::write(char* buf,int count) 
+int CCycleBuffer::write( char* buf,int count) 
 { 
 	/*resCode 返回值 
 	1.成功写入 已用空间占用率小于0.5 返回 0;
@@ -38,7 +40,7 @@ int CCycleBuffer::write(char* buf,int count)
          if(m_nReadPos > m_nWritePos) //读的位置在写位置前面
 	     {
 		    //剩余空间为读指针和写指针之间的空间
-		     memcpy(m_pBuf + m_nWritePos, buf, count); 
+		     memcpy((char*)(m_pBuf + m_nWritePos), buf, count); 
              m_nWritePos += count;
 	     }else
 	     {
@@ -46,17 +48,17 @@ int CCycleBuffer::write(char* buf,int count)
 		    leftcount = m_nBufSize - m_nWritePos;	    
 		    if(leftcount > count  || leftcount == count)//一次可以写入
             { 
-                memcpy(m_pBuf + m_nWritePos, buf, count); 
+                memcpy((char*)m_pBuf + m_nWritePos, buf, count); 
                 m_nWritePos += count;
 				
             }else //两次写入
 		    {
 			  //先把write指针之后的剩余空间填满
-			  memcpy(m_pBuf + m_nWritePos, buf, leftcount); 	 		
+			  memcpy((char*)m_pBuf + m_nWritePos, buf, leftcount); 	 		
 		      m_nWritePos = count - leftcount;
 		      
 			  //在从头拷贝剩下的数据
-              memcpy(m_pBuf, buf + leftcount, m_nWritePos); 		    			
+              memcpy((char*)m_pBuf, buf + leftcount, m_nWritePos); 		    			
 		   }		   
         } 
 		
@@ -129,17 +131,20 @@ int CCycleBuffer::read(char* buf,int count, bool resetFlag)
 	     {
 			 resCode = 1;
 	     }
-
+             tagCount++;
+             if(tagCount == 500)
+             {
+                 tagCount=0;
 		 LOG(ERROR) <<"缓冲区数据不足 m_usedSize:"<<m_usedSize<<"  count:"<<count;
+             }
 		 
 	     //rtmp异常读不到数据,重初始化缓冲区
 	     if(resetFlag)
          {
 			 LOG(ERROR) <<"rtmp读数据超时，读不到一个Tag 重置缓冲区, 等待下次重连  m_usedSize:"<<m_usedSize<<"  count:"<<count;
-			 m_nBufSize = size;
 			 m_nReadPos =0;
 			 m_nWritePos =0;
-			 memset(m_pBuf,0,m_nBufSize);
+			 memset((char*)m_pBuf,0,m_nBufSize);
 			 m_usedSize = 0;
          }
 		 

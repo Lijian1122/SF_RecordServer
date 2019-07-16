@@ -157,14 +157,14 @@ int RecordSaveRunnable::StartRecord()
     m_ret = CreateFile();
     if(0 != m_ret)
     {
-         LOG(ERROR) << "新建文件失败  ret:"<<ret<<"  直播ID:"<<m_recordID;
+         LOG(ERROR) << "新建文件失败  m_ret:"<<m_ret<<"  直播ID:"<<m_recordID;
          return m_ret;
     }
 
     m_ret = pthread_create(&producter_t, NULL, Recive_fun, (void *)this);
     if(0 != m_ret)
     {
-         LOG(ERROR) << "创建读线程失败  ret:"<<ret<<"   直播ID:"<<m_recordID;
+         LOG(ERROR) << "创建读线程失败  m_ret:"<<m_ret<<"   直播ID:"<<m_recordID;
          return m_ret;
     }
 
@@ -173,8 +173,8 @@ int RecordSaveRunnable::StartRecord()
     {
         runningp = 0;
         pthread_join(producter_t,NULL);
-        LOG(ERROR) << "创建写线程失败  ret:"<<ret<<"  直播ID:"<<m_recordID;
-        return ret;
+        LOG(ERROR) << "创建写线程失败  m_ret:"<<m_ret<<"  直播ID:"<<m_recordID;
+        return m_ret;
     }
 
     LOG(INFO) << "已启动录制读写线程  直播ID:"<<m_recordID;
@@ -409,7 +409,7 @@ int RecordSaveRunnable::BrokenlineReconnection(int re_Connects)
 	      }
 	      //重连初始化
 	      ret = BrokenlineReconnectionInit(m_pRtmp,re_Connects);
-	      if(ret ! = 0)
+	      if(0 != ret)
           {
               LOG(ERROR) << "重连初始化失败 "<<"  liveId:"<<m_recordID<<" re_Connects:"<<re_Connects;
           }
@@ -714,7 +714,7 @@ void *RecordSaveRunnable::rtmpSave_f()
 {
 	//Tag头缓冲区
 	int tagHeadSize = 11;
-	const char *tagHead_buf = (char*)malloc(tagHeadSize);
+         char *tagHead_buf = (char*)malloc(tagHeadSize);
 	if(NULL == tagHead_buf)
 	{
            LOG(ERROR) << "tagHeadSize 申请内存失败  直播ID:"<<m_recordID;
@@ -725,7 +725,7 @@ void *RecordSaveRunnable::rtmpSave_f()
     //Tag数据缓冲区
     int TAG_BUFF_SIZE = 5 * 1024 *1024;
     int tagdataSize = 0;
-    const char *tagData_buf  = (char*)malloc(TAG_BUFF_SIZE);
+    char *tagData_buf  = (char*)malloc(TAG_BUFF_SIZE);
     if(NULL == tagData_buf)
     {
        LOG(ERROR) << "tagData_buf 申请内存失败  直播ID:"<<m_recordID;
@@ -740,7 +740,7 @@ void *RecordSaveRunnable::rtmpSave_f()
     bool tagFlag = true;
 	int ToRead = 0;
 	int readTagSize = 0;
-
+    int time = 0;
     while(runningc)
     {	              	
         if(tagFlag) //开始解析Tag头
@@ -755,7 +755,12 @@ void *RecordSaveRunnable::rtmpSave_f()
 				  LOG(INFO) << "写缓存结束  直播ID: "<<m_recordID;				  
 				  break;		  
 			   }
-			   LOG(INFO) << "写缓存死循环1111  直播ID: "<<m_recordID<<m_ret;
+                           time++;
+                           if(time == 500)
+                           {
+			      LOG(INFO) << "写缓存死循环1111  直播ID: "<<m_recordID<<"  m_ret:"<<m_ret;
+                              time = 0;
+                           }
 			   continue;	  
 		   }
 		 
@@ -795,7 +800,13 @@ void *RecordSaveRunnable::rtmpSave_f()
 				  LOG(INFO) << "写缓存结束  直播ID: "<<m_recordID;				  
 				  break;		  
 			  }
-			  LOG(INFO) << "写缓存死循环2222  直播ID: "<<m_recordID <<" m_ret:"<<m_ret;
+                          time++;
+                          if(time == 500) 
+                          {
+                             time = 0;
+			     LOG(INFO) << "写缓存死循环2222  直播ID: "<<m_recordID <<" m_ret:"<<m_ret;
+                          }
+                          
 			  continue;
 		   }	    
 		    
@@ -925,7 +936,7 @@ int RecordSaveRunnable::UpdataRecordflag(LibcurClient *http_client ,int flag)
 }
 
 //获取直播流tag数据进行写文件
-int RecordSaveRunnable::WriteFile(const char *tagHead_buf,  const char *tagData_buf, int tagdataSize)
+int RecordSaveRunnable::WriteFile(char *tagHead_buf, char *tagData_buf, int tagdataSize)
 {          
          
     //时间戳指针
@@ -960,7 +971,7 @@ int RecordSaveRunnable::WriteFile(const char *tagHead_buf,  const char *tagData_
 }
 
 //白板数据写入json文件
-bool RecordSaveRunnable::WriteExtractDefine(const char *timebuff,const char *data, int tagdataSize)
+bool RecordSaveRunnable::WriteExtractDefine(char *timebuff,char *data, int tagdataSize)
 {
 
      bool bResult = true;
@@ -1017,7 +1028,7 @@ bool RecordSaveRunnable::WriteExtractDefine(const char *timebuff,const char *dat
 
 
 //aac数据写入aac文件
-int RecordSaveRunnable::WriteAac(const char *timebuff ,const char *data, int datasize)
+int RecordSaveRunnable::WriteAac(char *timebuff , char *data, int datasize)
 {       
 	if(data[1] == 0x00)
 	{
@@ -1075,10 +1086,10 @@ int RecordSaveRunnable::WriteAac(const char *timebuff ,const char *data, int dat
 
 
 //264数据写入.h264文件
-int RecordSaveRunnable::Write264data(const char *timebuff, const char *packetBody, int datasize)
+int RecordSaveRunnable::Write264data(char *timebuff,char *packetBody, int datasize)
 {      
-     const char flag[] = {0x00,0x00,0x00,0x01};
-     const char *p = packetBody;
+     char flag[] = {0x00,0x00,0x00,0x01};
+     char *p = packetBody;
 
      char sizebuff[4] = {0};    
      int len = 0;

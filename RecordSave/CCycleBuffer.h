@@ -42,12 +42,14 @@ class CCycleBuffer
     pthread_cond_t notempty;  /* 缓冲区非空的条件变量 */
     pthread_cond_t notfull;   /* 缓冲区未满的条件变量 */
  
-    char* m_pBuf;    //缓冲区
+    const char* m_pBuf;    //缓冲区
     int m_nBufSize;  //缓冲区大小
     int m_nReadPos;  //读指针位置
     int m_nWritePos; //写指针位置
    
     int m_usedSize;  //已用空间
+
+    int tagCount;
 };
 
 #endif// CCycleBuffer_H
