@@ -8,6 +8,7 @@
 2019.01.15 把条件变量和互斥锁封装进缓冲区类中，方便rtmp读写线程调用
 2019.01.18 优化环形缓冲区代码
 2019.01.25 把读数据缓冲区为空的状态返回 2
+2019.07.20 缓冲区增加日志
 ****************************************************/
  
 #ifndef CCycleBuffer_H
@@ -50,6 +51,7 @@ class CCycleBuffer
     int m_usedSize;  //已用空间
 
     int tagCount;
+    int writeCount;
 };
 
 #endif// CCycleBuffer_H

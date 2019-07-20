@@ -61,7 +61,7 @@ static int MDH_generate_key(MDH *dh)
   MP_set(&dh->ctx.P, dh->p);
   MP_set(&dh->ctx.G, dh->g);
   dh->ctx.len = 128;
-  dhm_make_public(&dh->ctx, 1024, out, 1, havege_random, &RTMP_TLS_ctx->hs);
+  dhm_make_public(&dh->ctx, 1024, out, 1, havege_rand, &RTMP_TLS_ctx->hs);
   MP_new(dh->pub_key);
   MP_new(dh->priv_key);
   MP_set(dh->pub_key, &dh->ctx.GX);
@@ -79,7 +79,6 @@ static int MDH_compute_key(uint8_t *secret, size_t len, MP_t pub, MDH *dh)
 #elif defined(USE_GNUTLS)
 #include <gmp.h>
 #include <nettle/bignum.h>
-#include <gnutls/crypto.h>
 typedef mpz_ptr MP_t;
 #define MP_new(m)	m = malloc(sizeof(*m)); mpz_init2(m, 1)
 #define MP_set_w(mpi, w)	mpz_set_ui(mpi, w)
@@ -105,62 +104,21 @@ typedef struct MDH {
 #define	MDH_new()	calloc(1,sizeof(MDH))
 #define MDH_free(dh)	do {MP_free(((MDH*)(dh))->p); MP_free(((MDH*)(dh))->g); MP_free(((MDH*)(dh))->pub_key); MP_free(((MDH*)(dh))->priv_key); free(dh);} while(0)
 
-static int MDH_generate_key(MDH *dh)
-{
-  int num_bytes;
-  uint32_t seed;
-  gmp_randstate_t rs;
+extern MP_t gnutls_calc_dh_secret(MP_t *priv, MP_t g, MP_t p);
+extern MP_t gnutls_calc_dh_key(MP_t y, MP_t x, MP_t p);
 
-  num_bytes = (mpz_sizeinbase(dh->p, 2) + 7) / 8 - 1;
-  if (num_bytes <= 0 || num_bytes > 18000)
-    return 0;
-
-  dh->priv_key = calloc(1, sizeof(*dh->priv_key));
-  if (!dh->priv_key)
-    return 0;
-  mpz_init2(dh->priv_key, 1);
-  gnutls_rnd(GNUTLS_RND_RANDOM, &seed, sizeof(seed));
-  gmp_randinit_mt(rs);
-  gmp_randseed_ui(rs, seed);
-  mpz_urandomb(dh->priv_key, rs, num_bytes);
-  gmp_randclear(rs);
-
-  dh->pub_key = calloc(1, sizeof(*dh->pub_key));
-  if (!dh->pub_key)
-    return 0;
-  mpz_init2(dh->pub_key, 1);
-  if (!dh->pub_key) {
-    mpz_clear(dh->priv_key);
-    free(dh->priv_key);
-    return 0;
-  }
-
-  mpz_powm(dh->pub_key, dh->g, dh->priv_key, dh->p);
-
-  return 1;
-}
-
+#define MDH_generate_key(dh)	(dh->pub_key = gnutls_calc_dh_secret(&dh->priv_key, dh->g, dh->p))
 static int MDH_compute_key(uint8_t *secret, size_t len, MP_t pub, MDH *dh)
 {
-  mpz_ptr k;
-  int num_bytes;
-
-  num_bytes = (mpz_sizeinbase(dh->p, 2) + 7) / 8;
-  if (num_bytes <= 0 || num_bytes > 18000)
+  MP_t sec = gnutls_calc_dh_key(pub, dh->priv_key, dh->p);
+  if (sec)
+    {
+	  MP_setbin(sec, secret, len);
+	  MP_free(sec);
+	  return 0;
+	}
+  else
     return -1;
-
-  k = calloc(1, sizeof(*k));
-  if (!k)
-    return -1;
-  mpz_init2(k, 1);
-
-  mpz_powm(k, pub, dh->priv_key, dh->p);
-  nettle_mpz_get_str_256(len, secret, k);
-  mpz_clear(k);
-  free(k);
-
-  /* return the length of the shared secret key like DH_compute_key */
-  return len;
 }
 
 #else /* USE_OPENSSL */

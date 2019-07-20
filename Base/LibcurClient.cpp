@@ -45,7 +45,7 @@ int LibcurClient::HttpGetData(const char *url, int timeout , int connect_timeout
 	res = curl_easy_setopt(m_curl, CURLOPT_CONNECTTIMEOUT, connect_timeout);
 
 	// 执行一次URL请求
-    res = curl_easy_perform(m_curl);
+       res = curl_easy_perform(m_curl);
 
 	return res;
 }

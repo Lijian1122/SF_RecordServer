@@ -32,9 +32,6 @@
 #include "rtmp_sys.h"
 #include "log.h"
 
-//#define INT_MAX 2147483647
-//#define INT_MIN (-INT_MAX - 1)
-
 #ifdef CRYPTO
 #ifdef USE_POLARSSL
 #include <polarssl/havege.h>
