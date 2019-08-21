@@ -25,6 +25,7 @@ v0.0.5
 v0.0.6
 2019.07.19 解决直播超过4.5小时，操作白板数据时录制服务录制异常或崩溃的问题，替换更新librtmp库
 2019.07.20 增加释放内存日志，只允许读超时的时候 清空环形缓冲区
+2019.07.21 写文件异常,加日志
 ******************************************************/
 
 #ifndef RECORDSAVERUNNABLE_H
@@ -175,11 +176,8 @@ private:
 
     //更新录制状态
     int UpdataRecordflag(LibcurClient *recive_http ,int flag);
-	
-     //上传白板数据
-    int UploadWhiteData(LibcurClient *recive_http ,std::string data);
-	
-     //写线程结束上传录制完成状态
+		
+    //写线程结束上传录制完成状态
     void UploadRecordStopFlag();
 
 private:

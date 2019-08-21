@@ -361,6 +361,8 @@ int RecordSaveRunnable::BrokenlineReconnectionInit(RTMP *m_pRtmp ,int reConntion
 {
 
      LOG(INFO) << "开始重连初始化   直播ID:"<<m_recordID;
+
+     int ret = 0;
      if(RTMP_IsConnected(m_pRtmp))
      {
          RTMP_Close(m_pRtmp);
@@ -374,13 +376,12 @@ int RecordSaveRunnable::BrokenlineReconnectionInit(RTMP *m_pRtmp ,int reConntion
      aacTagNum = 0;
      firstflag = true;
      rtmpReadTimeout = false;
-     int ret = CreateFile();
-
+     /*ret = CreateFile();
      if(0 != ret)
      {
         LOG(ERROR) << "新建文件失败  ret:"<<ret<<"  直播ID:"<<m_recordID;
         return ret;
-     }  
+     }*/ 
 
      LOG(INFO) << "重连初始化结束   直播ID:"<<m_recordID;
      return ret;
@@ -395,11 +396,11 @@ int RecordSaveRunnable::BrokenlineReconnection(int re_Connects)
 	{
 	      LOG(ERROR) << "准备重连 直播ID:"<<m_recordID<<" re_Connects:"<<re_Connects;
 	      //检测录制的音频 视频文件大小如果为0，删除录制的文件
-	      fseek(afile,0L,SEEK_END); /* 定位到文件末尾 */
-	      int aacDataLen=ftell(afile); /*得到文件大小*/
+	      /*fseek(afile,0L,SEEK_END);
+	      int aacDataLen=ftell(afile); 
 		 
-	      fseek(vfile,0L,SEEK_END); /* 定位到文件末尾 */
-	      int h264DataLen=ftell(vfile); /*得到文件大小*/
+	      fseek(vfile,0L,SEEK_END);
+	      int h264DataLen=ftell(vfile);
 		  
 	      fclose(afile);
 	      fclose(vfile);
@@ -417,23 +418,24 @@ int RecordSaveRunnable::BrokenlineReconnection(int re_Connects)
 	          remove(h264fileName.c_str());
 	          remove(whitefileName.c_str());
 	          remove(flvfileName.c_str());
-	      }
+	      }*/
+
 	      //重连初始化
 	      ret = BrokenlineReconnectionInit(m_pRtmp,re_Connects);
-	      if(0 != ret)
+	      /*if(0 != ret)
               {
                 LOG(ERROR) << "重连初始化失败 "<<"  liveId:"<<m_recordID<<" re_Connects:"<<re_Connects;
                 ret = 2;
-              }
+              }*/
 	}else
 	{
 	   LOG(ERROR) << "重连次数超过三次，停止录制任务 直播ID:"<<m_recordID<<"  re_Connects:"<<re_Connects;
 
 	   //重连失败，删除空文件
-	   remove(aacfileName.c_str());
+	   /*remove(aacfileName.c_str());
 	   remove(h264fileName.c_str());
 	   remove(whitefileName.c_str());
-	   remove(flvfileName.c_str());
+	   remove(flvfileName.c_str());*/
                       
 	   save_httpflag = false;
 	   runningp = 0;
@@ -514,6 +516,7 @@ begin:
           fwrite(buf, sizeof(char), nRead, flvfile);    
           if(0 != re_Connects)
           {
+              LOG(INFO) << "已重连成功 re_Connects:"<<re_Connects<<"   直播ID:"<<m_recordID;
               re_Connects = 0;
           }
             
@@ -547,14 +550,14 @@ begin:
          LOG(ERROR) << "检测到rtmp读不到数据,nRead:"<<nRead<<"   直播ID:"<<m_recordID<<" status:"<<status<<"  socketfd:"<<m_pRtmp->m_sb.sb_socket;
 
          //rtmp读不到数据,且收到停止录制命令,停止读取数据
-        if(stopflag)
-        {
+         if(stopflag)
+         {
                 LOG(ERROR) << "rtmp读不到数据,且收到录制停止命令 直播ID:"<<m_recordID;
                 runningp = 0;
                 break;
-        }
+         }
 
-        //rtmp读数据超时
+         //rtmp读数据超时
         if(RTMP_IsTimedout(m_pRtmp))
         {
 
@@ -676,13 +679,13 @@ begin:
                 //rtmp重连
                 re_Connects++;			
                 m_ret = BrokenlineReconnection(re_Connects);
-				if(0 == m_ret)
-			    {					
+		if(0 == m_ret)
+		{					
                     goto begin; //开始重连 			
-				}else
-				{
+		}else
+		{
                     break;	//重连超过三次,停止录制任务						 
-				}  
+		}  
           }else
           {
                 LOG(ERROR) <<"直播过程中rtmp读不到数据,其他未知原因  直播ID:"<<m_recordID;
@@ -699,7 +702,7 @@ end:
    }
    if(NULL != m_pRtmp)
    {
-      RTMP_Free(m_pRtmp);
+          RTMP_Free(m_pRtmp);
 	  m_pRtmp = NULL;
    }
    if(runningp)
@@ -764,10 +767,10 @@ void *RecordSaveRunnable::rtmpSave_f()
     //Tag数据长度缓冲区
     int tagSize = 4;
 	
-	int m_ret = 0;
+    int m_ret = 0;
     bool tagFlag = true;
-	int ToRead = 0;
-	int readTagSize = 0;
+    int ToRead = 0;
+    int readTagSize = 0;
     int time = 0;
     while(runningc)
     {	              	
@@ -862,7 +865,7 @@ void *RecordSaveRunnable::rtmpSave_f()
 			  LOG(ERROR) << "写入tag长度失败共:  "<< tagdataSize<<"字节未写入 直播ID:"<<m_recordID;
 		  } */
 	  	  		 		  
-          //重置Tag头flag				
+               //重置Tag头flag				
 	      tagFlag = true;	
 	   }
     }
@@ -926,23 +929,6 @@ void RecordSaveRunnable::UploadRecordStopFlag()
    }		
 }
 
-//上传白板数据
-int RecordSaveRunnable::UploadWhiteData(LibcurClient *httpclient, std::string data)
-{
-      string urlStr = IpPort;
-      
-      urlStr.append(liveUpload);
-
-      printf("uploadURL: %s\n", urlStr.c_str());
-      
-      //int m_ret = httpclient->HttpPostData(urlStr.c_str(), m_recordID ,data);
-      if(0 != m_ret)
-      {
-         LOG(ERROR) << "调用上传白板数据接口失败  m_ret:"<<m_ret<<" 直播ID"<<m_recordID;      
-      }
-      return m_ret;
-}
-
 //更新录制状态
 int RecordSaveRunnable::UpdataRecordflag(LibcurClient *http_client ,int flag)
 {  
@@ -991,7 +977,7 @@ int RecordSaveRunnable::WriteFile(char *tagHead_buf, char *tagData_buf, int tagd
 	
     if(tagHead_buf[0] == 0x09) // 视频 
     {    
-	   if(0 != Write264data(timestamp_buf ,tagData_buf,tagdataSize))
+       if(0 != Write264data(timestamp_buf ,tagData_buf,tagdataSize))
        {
            LOG(ERROR) << "视频tag写入失败 直播ID: "<<m_recordID;
            return 1;
@@ -999,7 +985,7 @@ int RecordSaveRunnable::WriteFile(char *tagHead_buf, char *tagData_buf, int tagd
 	   
     }else if(tagHead_buf[0] == 0x08) //音频
     {   
-	   if(0 != WriteAac(timestamp_buf ,tagData_buf,tagdataSize))
+       if(0 != WriteAac(timestamp_buf ,tagData_buf,tagdataSize))
        {
           LOG(ERROR) << "音频tag写入失败 直播ID: "<<m_recordID;
           return 2;
@@ -1064,6 +1050,7 @@ bool RecordSaveRunnable::WriteExtractDefine(char *timebuff,char *data, int tagda
     sizebuff[3] = (buffSize & 0x000000ff);  	
     if(4 != fwrite(sizebuff, sizeof(char), 4 ,wfile))
     {
+         LOG(ERROR) << "写入白板数据长度失败 buffSize: "<<buffSize<<"   直播ID: "<<m_recordID;
          bResult = false;
          return bResult;
     }
@@ -1071,16 +1058,17 @@ bool RecordSaveRunnable::WriteExtractDefine(char *timebuff,char *data, int tagda
     //写入时间戳
     if(timestampSize != fwrite(timebuff, sizeof(char), timestampSize ,wfile))
     {
+         LOG(ERROR) << "写入白板时间戳失败  直播ID: "<<m_recordID;
          bResult = false;
          return bResult;
     }
 
     if(iLenVale != fwrite(strDefine.c_str(), 1, iLenVale, wfile))
     {
+         LOG(ERROR) << "写入白板数据失败  iLenVale:"<<iLenVale<<"  直播ID: "<<m_recordID;
          bResult = false;
 	 return bResult;
     }
-
     return bResult;
 }
 
@@ -1121,12 +1109,14 @@ int RecordSaveRunnable::WriteAac(char *timebuff , char *data, int datasize)
         //写入时间戳
         if(timestampSize != fwrite(timebuff, 1, timestampSize, afile))
         {
-           return 2;
+            LOG(ERROR) << "写入aac时间戳失败  直播ID: "<<m_recordID;
+            return 2;
         }
  
         if(datasize - 2 != fwrite(data + 2, 1, datasize - 2, afile))
 	{    
-	  	 return 3;
+           LOG(ERROR) << "写入aac数据长度失败 datasize:"<<datasize<<"   直播ID: "<<m_recordID;       
+	   return 3;
         }
    }
 
@@ -1139,6 +1129,10 @@ int RecordSaveRunnable::WriteAac(char *timebuff , char *data, int datasize)
       {
          recive_httpflag = 1;
          int m_ret = UpdataRecordflag(save_http,RECORD_FLAG::RECORD_UPDATE);
+         if(0 != m_ret)
+         {
+            LOG(ERROR)<<"上传录制状态失败  m_ret:"<<m_ret<<"   直播ID"<<m_recordID;
+         }
       } 
       aacTagNum = 0;
    }
@@ -1161,7 +1155,7 @@ int RecordSaveRunnable::Write264data(char *timebuff,char *packetBody, int datasi
 
    	     p = p + 11;
 		 
-		 //获取sps数据长度
+	     //获取sps数据长度
 	     char sps[2]= {0};
 	     strncpy(sps,p,2);
 		 
@@ -1179,23 +1173,27 @@ int RecordSaveRunnable::Write264data(char *timebuff,char *packetBody, int datasi
 
           //写入长度
          buffSize = len + 4;
-	     sizebuff[0] = (buffSize & 0xff000000) >> 24;
+	 sizebuff[0] = (buffSize & 0xff000000) >> 24;
          sizebuff[1] = (buffSize & 0x00ff0000) >> 16;  
          sizebuff[2] = (buffSize & 0x0000ff00) >> 8;  
-         sizebuff[3] = (buffSize & 0x000000ff);  	
+         sizebuff[3] = (buffSize & 0x000000ff);
+  	
          if(4 != fwrite(sizebuff, sizeof(char), 4 ,vfile))
          {
+             LOG(ERROR) << "写入sps数据长度失败  buffSize:"<<buffSize<<"  直播ID: "<<m_recordID;
              return 2;
          }
 
          //写入时间戳
          if(4 != fwrite(timebuff, sizeof(char), 4 ,vfile))
          {
+             LOG(ERROR) << "写入sps时间戳失败  直播ID: "<<m_recordID;
              return 2;
          }
 
          if(len != fwrite(p, sizeof(char), len, vfile))
          {
+            LOG(ERROR) << "写入sps数据失败  len:"<<len<<"   直播ID: "<<m_recordID;
              return 3;
          }
        
@@ -1222,27 +1220,30 @@ int RecordSaveRunnable::Write264data(char *timebuff,char *packetBody, int datasi
          sizebuff[3] = (buffSize & 0x000000ff);  	
          if(4 != fwrite(sizebuff, sizeof(char), 4 ,vfile))
          {
+             LOG(ERROR) << "写入pps数据长度失败  buffSize:"<<buffSize<<"  直播ID: "<<m_recordID;
              return 2;
          }
 
           //写入时间戳
          if(4 != fwrite(timebuff, sizeof(char), 4 ,vfile))
          {
+             LOG(ERROR) << "写入pps时间戳失败  直播ID: "<<m_recordID;
              return 2;
          }
 
-        if(len != fwrite(p, sizeof(char), len, vfile))
-        {
+         if(len != fwrite(p, sizeof(char), len, vfile))
+         {
+            LOG(ERROR) << "写入pps数据失败  len:"<<len<<"  直播ID: "<<m_recordID;
             return 6;
-        }	
+         }	
      }else
      {
 	     p = p + 9;
 
 	     /*if(4 != fwrite(flag, sizeof(char), 4, vfile))
-         {
-            return  7;
-         }*/
+             {
+              return  7;
+             }*/
 
          buffSize = datasize - 9 + 4;
          memset(sizebuff,0 ,4);
@@ -1252,16 +1253,19 @@ int RecordSaveRunnable::Write264data(char *timebuff,char *packetBody, int datasi
          sizebuff[3] = (buffSize & 0x000000ff);
          if(4 != fwrite(sizebuff, sizeof(char), 4 ,vfile))
          {
+             LOG(ERROR) << "写入h264数据长度失败 buffSize:"<<buffSize<<"  直播ID: "<<m_recordID;
              return 2;
          }
          //写入时间戳
          if(4 != fwrite(timebuff, sizeof(char), 4 ,vfile))
          {
+             LOG(ERROR) << "写入h264时间戳失败  直播ID: "<<m_recordID;
              return 8;
          }
 
          if((datasize - 9) != fwrite(p, sizeof(char), datasize - 9, vfile))
          {
+             LOG(ERROR) << "写入h264数据失败 datasize:"<<datasize<<"   直播ID: "<<m_recordID;
              return  9;
          }
     }
